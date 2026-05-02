@@ -360,8 +360,8 @@
         // =========================================================================
         // ⚠️ ĐIỀN THÔNG TIN TURSO DATABASE CỦA BẠN VÀO ĐÂY
         // =========================================================================
-        const TURSO_URL = 'https://ethan-db-thinhdost.aws-ap-northeast-1.turso.io';
-        const TURSO_TOKEN = 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3Nzc2OTcxMjIsImlkIjoiMDE5ZGU3MDAtOWQwMS03MTdiLWE3M2UtYWY4MDc3MWExZmY0IiwicmlkIjoiZTlkYmYyMmMtYjFkMS00MTExLWIyOTYtMzgyNzk4MWNkMDhmIn0.MkmnIZklhzD1uCd0rAML0Rkq6x8xGXEKRNFxN7Y3BJnCEE28BpvqtDxwBKe4j3VlCvz8FZP2NPb0oeJk06fqAw';
+        const TURSO_URL = 'https://db-info.giathinh260307.workers.dev/';
+        const TURSO_TOKEN = 'aHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj1kUXc0dzlXZ1hjUQ==';
 
         let db;
         let currentBase64Image = null;
@@ -538,7 +538,7 @@
         // --- XÓA BÀI + HIỆU ỨNG VỠ KÍNH ---
         window.deletePost = async function(postId) {
             const passcode = prompt("Nhập mật mã Quản trị viên để thi triển ma pháp phá hủy:");
-            if (passcode !== "819426" && passcode !== "0") {
+            if (passcode !== "0") {
                 if (passcode !== null) alert("Mật mã sai! Kẻ xâm nhập đã bị phát hiện. (＃￣ω￣)");
                 return; 
             }
