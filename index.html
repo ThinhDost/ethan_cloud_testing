@@ -329,22 +329,21 @@
     <script type="module">
         import { createClient } from "https://esm.sh/@libsql/client/web";
 
-        // ⚠️ NHỚ SỬA: Phải dùng https:// (Không được dùng libsql://)
-        const TURSO_URL = 'https://ethan-db-thinhdost.aws-ap-northeast-1.turso.io';
-        const TURSO_TOKEN = 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3Nzc2OTcxMjIsImlkIjoiMDE5ZGU3MDAtOWQwMS03MTdiLWE3M2UtYWY4MDc3MWExZmY0IiwicmlkIjoiZTlkYmYyMmMtYjFkMS00MTExLWIyOTYtMzgyNzk4MWNkMDhmIn0.MkmnIZklhzD1uCd0rAML0Rkq6x8xGXEKRNFxN7Y3BJnCEE28BpvqtDxwBKe4j3VlCvz8FZP2NPb0oeJk06fqAw';
+        // ⚠️ NHỚ SỬA: Điền thông tin Cloud DB của bạn vào đây
+        const TURSO_URL = 'https://ĐIỀN_URL_CỦA_BẠN.turso.io';
+        const TURSO_TOKEN = 'ĐIỀN_TOKEN_CỦA_BẠN';
 
         let db;
         try {
             db = createClient({ url: TURSO_URL, authToken: TURSO_TOKEN });
             console.log("Đã gắn động cơ Database!");
             
-            // Kích hoạt hàm kéo bài viết ngay khi vừa mở web
             setTimeout(() => { window.fetchPosts(); }, 100);
         } catch (e) {
             console.error("Lỗi cấu hình:", e);
         }
 
-        // HÀM TẢI BÀI VIẾT (Đọc từ Cloud)
+        // 1. HÀM TẢI BÀI VIẾT (Đã thêm Nút Xóa)
         window.fetchPosts = async function() {
             const feed = document.getElementById('feed-container');
             try {
@@ -359,17 +358,18 @@
                 result.rows.forEach(post => {
                     const author = post.author || 'Anonymous';
                     const rawText = post.content || '';
-                    // Cộng thêm chữ Z để chuyển giờ UTC của Database sang giờ khu vực (Việt Nam)
                     const date = new Date(post.created_at + "Z").toLocaleString('vi-VN');
+                    const postId = post.id; // Lấy ID của bài viết từ Database
                     
-                    // 🛡️ BẢO VỆ GIAO DIỆN KHỎI WEB LẠ KHI NHÚNG HTML
+                    // Cơ chế bảo vệ Iframe
                     let safeContent = rawText;
-                    if (safeContent.includes('<html') || safeContent.includes('<iframe') || safeContent.includes('<body')) {
+                    if (safeContent.includes('<html') || safeContent.includes('<iframe') || safeContent.includes('<body') || safeContent.includes('<style')) {
                         safeContent = `<iframe srcdoc="${safeContent.replace(/"/g, '&quot;')}"></iframe>`;
                     } else {
                         safeContent = safeContent.replace(/\n/g, '<br>');
                     }
 
+                    // Đổ dữ liệu ra HTML (Thêm nút Xóa màu đỏ)
                     feed.innerHTML += `
                         <article class="glass-panel">
                             <div class="post-header">
@@ -383,19 +383,24 @@
                                 ${safeContent}
                             </div>
                             <div class="flex-between" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
-                                <button class="liquid-btn" style="padding: 8px 15px; font-size: 0.9rem;">💖 Thích</button>
-                                <button class="liquid-btn" style="padding: 8px 15px; font-size: 0.9rem;">💬 Bình luận</button>
+                                <div>
+                                    <button class="liquid-btn" style="padding: 8px 15px; font-size: 0.9rem;">💖 Thích</button>
+                                    <button class="liquid-btn" style="padding: 8px 15px; font-size: 0.9rem;">💬 Bình luận</button>
+                                </div>
+                                <button class="liquid-btn" style="padding: 8px 15px; font-size: 0.9rem; background: rgba(255, 50, 50, 0.3); border-color: rgba(255, 50, 50, 0.5);" onclick="window.deletePost(${postId})">
+                                    🗑️ Xóa
+                                </button>
                             </div>
                         </article>
                     `;
                 });
             } catch (error) {
                 console.error("Lỗi tải dữ liệu:", error);
-                feed.innerHTML = `<div style="text-align: center; color: red;">Lỗi tải dữ liệu. Bạn hãy chắc chắn đã tạo cột 'author' trong DB chưa nhé! <br> Lỗi chi tiết: ${error.message}</div>`;
+                feed.innerHTML = `<div style="text-align: center; color: red;">Lỗi tải dữ liệu. Lỗi chi tiết: ${error.message}</div>`;
             }
         }
 
-        // HÀM ĐĂNG BÀI VIẾT (Lưu lên Cloud)
+        // 2. HÀM ĐĂNG BÀI VIẾT (Giữ nguyên)
         window.submitPost = async function() {
             const author = document.getElementById('postAuthor').value || 'Anonymous';
             const text = document.getElementById('postText').value;
@@ -411,20 +416,46 @@
                     sql: "INSERT INTO posts (author, content) VALUES (?, ?)",
                     args: [author, text]
                 });
-
                 document.getElementById('postText').value = '';
                 toggleModal(false); 
-                
                 await window.fetchPosts(); 
-                
             } catch (error) {
-                console.error("Lỗi đăng bài:", error);
                 alert("Lỗi khi đăng: " + error.message);
             } finally {
                 btn.innerText = "🚀 Đăng bài";
                 btn.disabled = false;
             }
         }
+
+        // 3. HÀM XÓA BÀI VIẾT (Tính năng mới!)
+        window.deletePost = async function(postId) {
+            // Bước 1: Hỏi mật khẩu (Chỉ có bạn mới biết mật khẩu này)
+            const passcode = prompt("Vũ trụ này có luật lệ của nó. Hãy nhập mật mã Quản trị viên để xóa tín hiệu này:");
+            
+            // Bạn có thể đổi chữ "819426" thành bất kỳ mật khẩu nào bạn thích
+            if (passcode !== "819426") {
+                if (passcode !== null) alert("Mật mã sai! Kẻ xâm nhập đã bị phát hiện. (＃￣ω￣)");
+                return; // Dừng lại, không cho xóa
+            }
+
+            // Bước 2: Xác nhận lần cuối
+            const confirmDelete = confirm("Mật mã chính xác. Bạn có chắc chắn muốn ném bài viết này vào hố đen vũ trụ không?");
+            if (!confirmDelete) return;
+
+            try {
+                // Bước 3: Gửi lệnh DELETE lên Database
+                await db.execute({
+                    sql: "DELETE FROM posts WHERE id = ?",
+                    args: [postId]
+                });
+                
+                // Tải lại bảng tin sau khi xóa thành công
+                await window.fetchPosts();
+                alert("Đã tiêu diệt mục tiêu thành công! ✨");
+                
+            } catch (error) {
+                console.error("Lỗi khi xóa bài:", error);
+                alert("Lỗi không thể xóa: " + error.message);
+            }
+        }
     </script>
-</body>
-</html>
