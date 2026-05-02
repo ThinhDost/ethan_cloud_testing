@@ -538,7 +538,7 @@
         // --- XÓA BÀI + HIỆU ỨNG VỠ KÍNH ---
         window.deletePost = async function(postId) {
             const passcode = prompt("Nhập mật mã Quản trị viên để thi triển ma pháp phá hủy:");
-            if (passcode !== "819426" && passcode !== "0") {
+            if (passcode !== "0") {
                 if (passcode !== null) alert("Mật mã sai! Kẻ xâm nhập đã bị phát hiện. (＃￣ω￣)");
                 return; 
             }
