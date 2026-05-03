@@ -536,23 +536,32 @@
 
         // --- XÓA BÀI + HIỆU ỨNG VỠ KÍNH ---
         window.deletePost = async function(postId) {
+            if (!confirm("Bạn có chắc chắn muốn ném bài viết này vào hố đen vũ trụ không?")) return;
             const passcode = prompt("Nhập mật mã Quản trị viên để thi triển ma pháp phá hủy:");
-            if (passcode !== "0") {
-                if (passcode !== null) alert("Mật mã sai! Kẻ xâm nhập đã bị phát hiện. (＃￣ω￣)");
+            if(!passcode) return;
+            try {
+            const ketQua = await fetch("https://db-info.giathinh260307.workers.dev", {
+            method: "DELETE", 
+            
+            headers: {
+                "Content-Type": "application/json", // Nhãn báo hiệu: "Hàng bên trong là JSON nhé!"
+                "X-Admin-Password": passcode 
+            },
+            
+            // Nơi nhét đồ vật vào trong hộp (Body)
+            body: JSON.stringify({
+                postId: postId, 
+            })
+            });
+
+            if (!ketQua.ok){ 
+                alert("Mật mã sai! Kẻ xâm nhập đã bị phát hiện. (＃￣ω￣)");
                 return; 
             }
-
-            if (!confirm("Bạn có chắc chắn muốn ném bài viết này vào hố đen vũ trụ không?")) return;
 
             const wrapper = document.getElementById(`post-wrapper-${postId}`);
             const article = document.getElementById(`post-article-${postId}`);
             
-            try {
-                await db.execute({
-                    sql: "DELETE FROM posts WHERE id = ?",
-                    args: [postId]
-                });
-                
                 if (wrapper && article) {
                     const rect = article.getBoundingClientRect();
                     
@@ -605,7 +614,7 @@
                     wrapper.style.opacity = '0';
                 }
 
-                setTimeout(() => { window.fetchPosts(); }, 800);
+                //setTimeout(() => { window.fetchPosts(); }, 800);
 
             } catch (error) {
                 console.error("Lỗi khi xóa bài:", error);
