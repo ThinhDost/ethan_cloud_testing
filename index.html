@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>e t h a n testing website</title>
@@ -460,7 +462,8 @@
 
                 result.rows.forEach(post => {
                     const safeauthor = escapeHTML(post.author) || 'Anonymous';
-                    const safeContent = escapeHTML(post.content) || '';
+                    const rawText = post.content || '';
+                    const safeContent = DOMPurify.sanitize(rawText);
                     const date = new Date(post.created_at + "Z").toLocaleString('vi-VN');
                     const postId = post.id;
 
