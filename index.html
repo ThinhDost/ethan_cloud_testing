@@ -444,6 +444,9 @@
         }
 
         // --- TẢI BÀI VIẾT TỪ DB ---
+        function escapeHTML(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
         window.fetchPosts = async function() {
             const feed = document.getElementById('feed-container');
             try {
@@ -456,25 +459,18 @@
                 }
 
                 result.rows.forEach(post => {
-                    const author = post.author || 'Anonymous';
-                    const rawText = post.content || '';
+                    const safeauthor = escapeHTML(post.author) || 'Anonymous';
+                    const safeContent = escapeHTML(post.content) || '';
                     const date = new Date(post.created_at + "Z").toLocaleString('vi-VN');
                     const postId = post.id;
-                    
-                    let safeContent = rawText;
-                    if (safeContent.includes('<html') || safeContent.includes('<iframe') || safeContent.includes('<body') || safeContent.includes('<style')) {
-                        safeContent = `<iframe srcdoc="${safeContent.replace(/"/g, '&quot;')}"></iframe>`;
-                    } else {
-                        safeContent = safeContent.replace(/\n/g, '<br>');
-                    }
 
                     feed.innerHTML += `
                         <div id="post-wrapper-${postId}" style="margin-bottom: 20px;">
                             <article class="glass-panel" id="post-article-${postId}" style="margin-bottom: 0;">
                                 <div class="post-header">
-                                    <div class="avatar">${author.charAt(0).toUpperCase()}</div>
+                                    <div class="avatar">${safeauthor.charAt(0).toUpperCase()}</div>
                                     <div>
-                                        <h3 style="color: var(--soft-pink);">${author}</h3>
+                                        <h3 style="color: var(--soft-pink);">${safeauthor}</h3>
                                         <span class="post-meta">Đăng lúc: ${date}</span>
                                     </div>
                                 </div>
