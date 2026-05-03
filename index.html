@@ -545,17 +545,18 @@
             
             headers: {
                 "Content-Type": "application/json", // Nhãn báo hiệu: "Hàng bên trong là JSON nhé!"
-                "X-Admin-Password": passcode // <-- Chỗ giấu mật khẩu đây rồi!
+                "X-Admin-Password": passcode 
             },
             
             // Nơi nhét đồ vật vào trong hộp (Body)
             body: JSON.stringify({
-                postId: postId, // <-- Nơi để nhét ID của bài viết
+                postId: postId, 
             })
             });
 
-            if (!ketQua.ok){ alert("Mật mã sai! Kẻ xâm nhập đã bị phát hiện. (＃￣ω￣)");
-            return; 
+            if (!ketQua.ok){ 
+                alert("Mật mã sai! Kẻ xâm nhập đã bị phát hiện. (＃￣ω￣)");
+                return; 
             }
 
             const wrapper = document.getElementById(`post-wrapper-${postId}`);
@@ -613,7 +614,7 @@
                     wrapper.style.opacity = '0';
                 }
 
-                setTimeout(() => { window.fetchPosts(); }, 800);
+                //setTimeout(() => { window.fetchPosts(); }, 800);
 
             } catch (error) {
                 console.error("Lỗi khi xóa bài:", error);
