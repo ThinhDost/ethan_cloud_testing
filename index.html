@@ -444,6 +444,21 @@
         }
 
         // --- TẢI BÀI VIẾT TỪ DB ---
+            //chống basic xss
+        function cleanHTML(input)
+        {
+            if(!input) return '';
+            return input.replace(/[&<>'"]/g, tag =>(
+                {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;',
+                }[tag] || tag
+            ));
+        }
+
         window.fetchPosts = async function() {
             const feed = document.getElementById('feed-container');
             try {
@@ -457,16 +472,10 @@
 
                 result.rows.forEach(post => {
                     const author = post.author || 'Anonymous';
-                    const rawText = post.content || '';
+                    const safeContent = cleanHTML(post.content || '');
                     const date = new Date(post.created_at + "Z").toLocaleString('vi-VN');
                     const postId = post.id;
-                    
-                    let safeContent = rawText;
-                    if (safeContent.includes('<html') || safeContent.includes('<iframe') || safeContent.includes('<body') || safeContent.includes('<style')) {
-                        safeContent = `<iframe srcdoc="${safeContent.replace(/"/g, '&quot;')}"></iframe>`;
-                    } else {
-                        safeContent = safeContent.replace(/\n/g, '<br>');
-                    }
+
 
                     feed.innerHTML += `
                         <div id="post-wrapper-${postId}" style="margin-bottom: 20px;">
