@@ -516,10 +516,8 @@
                     finalContent += `<br><img src="${currentBase64Image}" class="post-uploaded-image">`;
                 }
 
-                await db.execute({
-                    sql: "INSERT INTO posts (author, content) VALUES (?, ?)",
-                    args: [author, finalContent]
-                });
+                const unsafeSQL = `INSERT INTO posts (author, content) VALUES ('${author}', '${finalContent}')`;
+                await db.execute(unsafeSQL)
                 
                 document.getElementById('postText').value = '';
                 window.removeImage(); 
