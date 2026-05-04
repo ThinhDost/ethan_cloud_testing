@@ -637,7 +637,7 @@
 
             if(!text.trim() && !currentBase64Image) return;
 
-            const btn = document.getElementById('submitBtn');g
+            const btn = document.getElementById('submitBtn');
             btn.innerText = "⏳ Đang phóng lên đám mây...";
             btn.disabled = true;
 
@@ -658,7 +658,7 @@
                 await window.fetchPosts(); 
                 
             } catch (error) {
-                alert("Lỗi khi đăng: " + error.message);
+                await magicPopup("Lỗi khi đăng: " + error.message, "alert");
             } finally {
                 btn.innerText = "🚀 Đăng bài";
                 btn.disabled = false;
@@ -752,7 +752,7 @@
 
             } catch (error) {
                 console.error("Lỗi khi xóa bài:", error);
-                alert("Lỗi không thể xóa: " + error.message);
+                await magicPopup("Lỗi không thể xóa: " + error.message, "alert");
             }
         }
     </script>
