@@ -177,6 +177,78 @@
             border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
         .post-uploaded-image { max-width: 100%; border-radius: 15px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.2); }
+        /* =========================================
+           THIẾT KẾ POPUP MA THUẬT
+           ========================================= */
+        #magic-popup-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(10, 5, 20, 0.8);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            z-index: 10000;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        
+        #magic-popup-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .magic-popup-box {
+            position: relative; width: 90%; max-width: 400px;
+            transform: translateY(50px) scale(0.9);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #magic-popup-overlay.active .magic-popup-box { transform: translateY(0) scale(1); }
+
+        .chat-bubble {
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            border-radius: 20px; padding: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5), inset 0 0 15px rgba(255, 119, 169, 0.2);
+            position: relative; margin-bottom: 20px;
+        }
+
+        .chat-bubble::after {
+            content: ''; position: absolute; bottom: -15px; left: 50px;
+            border-width: 15px 15px 0; border-style: solid;
+            border-color: rgba(255, 192, 203, 0.2) transparent transparent transparent;
+            display: block; width: 0;
+        }
+        .chat-bubble::before {
+            content: ''; position: absolute; bottom: -17px; left: 49px;
+            border-width: 17px 16px 0; border-style: solid;
+            border-color: var(--glass-border) transparent transparent transparent;
+            display: block; width: 0;
+        }
+
+        .popup-message { font-size: 1.1rem; line-height: 1.5; margin-bottom: 20px; text-align: center; }
+
+        .popup-input {
+            width: 100%; background: rgba(0,0,0,0.3); border: 2px solid var(--primary-pink);
+            color: white; padding: 12px; border-radius: 10px; font-size: 1.1rem;
+            text-align: center; margin-bottom: 20px; outline: none;
+            box-shadow: 0 0 15px rgba(255, 119, 169, 0.2);
+        }
+        .popup-input:focus { background: rgba(0,0,0,0.5); box-shadow: 0 0 20px rgba(255, 119, 169, 0.5); }
+
+        .popup-buttons { display: flex; gap: 15px; justify-content: center; }
+        .popup-btn-cancel { background: rgba(255, 255, 255, 0.1); box-shadow: none; border: none; padding: 10px 20px; border-radius: 20px; color: white; cursor: pointer; }
+        .popup-btn-cancel:hover { background: rgba(255, 255, 255, 0.2); }
+
+        .guardian-character { display: flex; align-items: flex-end; gap: 15px; padding-left: 20px; }
+        .guardian-avatar {
+            width: 70px; height: 70px;
+            background: radial-gradient(circle, var(--primary-pink), #8a2be2);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; border: 3px solid var(--text-light);
+            box-shadow: 0 0 20px var(--primary-pink);
+            animation: float 3s ease-in-out infinite;
+        }
+        .guardian-name {
+            font-family: 'Caveat', cursive; font-size: 1.5rem; color: var(--primary-pink);
+            text-shadow: 0 0 5px rgba(255,255,255,0.5); margin-bottom: 10px;
+        }
+
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
     </style>
 </head>
 <body>
@@ -355,6 +427,23 @@
         resize(); animate();
     </script>
 
+    <!-- HỘP THOẠI POPUP MA THUẬT -->
+    <div id="magic-popup-overlay">
+        <div class="magic-popup-box">
+            <div class="chat-bubble">
+                <p class="popup-message" id="popup-msg-text">Nội dung thông báo</p>
+                <input type="password" id="popup-pass-input" class="popup-input" placeholder="Nhập mật mã...">
+                <div class="popup-buttons">
+                    <button class="popup-btn-cancel" id="popup-btn-no">Hủy bỏ</button>
+                    <button id="popup-btn-yes" style="border:none; padding: 10px 20px; border-radius: 20px; cursor: pointer;">Xác nhận</button>
+                </div>
+            </div>
+            <div class="guardian-character">
+                <div class="guardian-avatar">🧙‍♀️</div>
+                <div class="guardian-name">Hệ thống phòng vệ</div>
+            </div>
+        </div>
+    </div>
 
     <script type="module">
         import { createClient } from "https://esm.sh/@libsql/client/web";
@@ -370,6 +459,48 @@
 
         try {
             db = createClient({ url: TURSO_URL, authToken: TURSO_TOKEN });
+            // HÀM ĐIỀU KHIỂN POPUP MA THUẬT
+            window.magicPopup = function(message, type = 'alert') {
+                return new Promise((resolve) => {
+                    const overlay = document.getElementById('magic-popup-overlay');
+                    const msgText = document.getElementById('popup-msg-text');
+                    const inputField = document.getElementById('popup-pass-input');
+                    const btnYes = document.getElementById('popup-btn-yes');
+                    const btnNo = document.getElementById('popup-btn-no');
+
+                    msgText.innerHTML = message;
+                    inputField.value = ''; 
+                    
+                    if (type === 'prompt') {
+                        inputField.style.display = 'block';
+                        btnNo.style.display = 'inline-flex';
+                    } else if (type === 'confirm') {
+                        inputField.style.display = 'none';
+                        btnNo.style.display = 'inline-flex';
+                    } else { 
+                        inputField.style.display = 'none';
+                        btnNo.style.display = 'none';
+                        btnYes.textContent = "Đã hiểu";
+                    }
+
+                    overlay.classList.add('active');
+                    if (type === 'prompt') setTimeout(() => inputField.focus(), 300);
+
+                    const closePopup = (result) => {
+                        overlay.classList.remove('active');
+                        btnYes.onclick = null; btnNo.onclick = null; inputField.onkeydown = null;
+                        btnYes.textContent = "Xác nhận"; 
+                        resolve(result); 
+                    };
+
+                    btnNo.onclick = () => closePopup(null);
+                    btnYes.onclick = () => {
+                        if (type === 'prompt') closePopup(inputField.value);
+                        else closePopup(true);
+                    };
+                    inputField.onkeydown = (e) => { if (e.key === 'Enter') btnYes.click(); };
+                });
+            };
             console.log("Đã gắn động cơ Database!");
             setTimeout(() => { window.fetchPosts(); }, 100);
         } catch (e) {
@@ -506,7 +637,7 @@
 
             if(!text.trim() && !currentBase64Image) return;
 
-            const btn = document.getElementById('submitBtn');
+            const btn = document.getElementById('submitBtn');g
             btn.innerText = "⏳ Đang phóng lên đám mây...";
             btn.disabled = true;
 
@@ -536,28 +667,31 @@
 
         // --- XÓA BÀI + HIỆU ỨNG VỠ KÍNH ---
         window.deletePost = async function(postId) {
-            if (!confirm("Bạn có chắc chắn muốn ném bài viết này vào hố đen vũ trụ không?")) return;
-            const passcode = prompt("Nhập mật mã Quản trị viên để thi triển ma pháp phá hủy:");
-            if(!passcode) return;
-            try {
-            const ketQua = await fetch("https://db-info.giathinh260307.workers.dev", {
-            method: "DELETE", 
-            
-            headers: {
-                "Content-Type": "application/json", // Nhãn báo hiệu: "Hàng bên trong là JSON nhé!"
-                "X-Admin-Password": passcode 
-            },
-            
-            // Nơi nhét đồ vật vào trong hộp (Body)
-            body: JSON.stringify({
-                postId: postId, 
-            })
-            });
+            // Thay thế hàm confirm()
+            const isSure = await magicPopup("Bạn có chắc chắn muốn ném bài viết này<br>vào hố đen vũ trụ không?", "confirm");
+            if (!isSure) return;
 
-            if (!ketQua.ok){ 
-                alert("Mật mã sai! Kẻ xâm nhập đã bị phát hiện. (＃￣ω￣)");
-                return; 
-            }
+            // Thay thế hàm prompt()
+            const passcode = await magicPopup("Nhập mật mã Quản trị viên<br>để thi triển ma pháp phá hủy:", "prompt");
+            if (!passcode) return;
+
+            try {
+                const ketQua = await fetch("https://db-info.giathinh260307.workers.dev", {
+                    method: "DELETE", 
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Admin-Password": passcode 
+                    },
+                    body: JSON.stringify({ id: postId })
+                });
+
+                if (!ketQua.ok){ 
+                    // Thay thế hàm alert()
+                    await magicPopup("Mật mã sai!<br>Kẻ xâm nhập đã bị phát hiện. (＃￣ω￣)", "alert");
+                    return; 
+                }
+
+                // HIỆU ỨNG XOÁ 
 
             const wrapper = document.getElementById(`post-wrapper-${postId}`);
             const article = document.getElementById(`post-article-${postId}`);
