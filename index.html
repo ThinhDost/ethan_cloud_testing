@@ -450,19 +450,19 @@
     </div>
 
     <script type="module">
-        import { createClient } from "https://esm.sh/@libsql/client/web";
+
 
         // =========================================================================
         // ⚠️ ĐIỀN THÔNG TIN TURSO DATABASE CỦA BẠN VÀO ĐÂY
         // =========================================================================
-        const TURSO_URL = 'https://db-info.giathinh260307.workers.dev/';
-        const TURSO_TOKEN = 'aHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj1kUXc0dzlXZ1hjUQ==';
+        const WORKER_URL = 'https://db-connector.giathinh260307.workers.dev/';
+        const DB_TOKEN = 'aHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj1kUXc0dzlXZ1hjUQ=='; 
 
         let db;
         let currentBase64Image = null;
 
         try {
-            db = createClient({ url: TURSO_URL, authToken: TURSO_TOKEN });
+           
             // HÀM ĐIỀU KHIỂN POPUP MA THUẬT
             window.magicPopup = function(message, type = 'alert') {
                 return new Promise((resolve) => {
@@ -587,18 +587,18 @@
         window.fetchPosts = async function() {
             const feed = document.getElementById('feed-container');
             try {
-                const result = await db.execute("SELECT * FROM posts ORDER BY created_at DESC");
-                feed.innerHTML = ''; 
+                const response = await fetch("https://db-connector.giathinh260307.workers.dev/api/posts");
+                const result = await response.json();
                 
-                if (result.rows.length === 0) {
-                     feed.innerHTML = '<div style="text-align: center; color: var(--soft-pink);">Chưa có bài viết nào. Hãy mở bát nhé!</div>';
-                     return;
-                }
+                feed.innerHTML = '';
 
                 result.rows.forEach(post => {
                     const safeauthor = escapeHTML(post.author) || 'Anonymous';
                     const rawText = post.content || '';
-                    const safeContent = DOMPurify.sanitize(rawText);
+                    const safeContent = DOMPurify.sanitize(rawText, {
+                    ALLOWED_TAGS: ['b', 'i', 'br', 'img'],
+                    ALLOWED_ATTR: ['src']
+                    });
                     const date = new Date(post.created_at + "Z").toLocaleString('vi-VN');
                     const postId = post.id;
 
@@ -650,11 +650,24 @@
                 if (currentBase64Image) {
                     finalContent += `<br><img src="${currentBase64Image}" class="post-uploaded-image">`;
                 }
+                
+                const payload =
+                {
+                    author: author,
+                    content: finalContent            
+                }
+                
+                // Gửi dữ liệu đến API Worker để lưu vào Turso DB
+                await fetch("https://db-connector.giathinh260307.workers.dev/api/posts", {
+                    method: "POST", 
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload) // Biến object thành chuỗi chữ để gửi đi
+                });
 
-                await db.execute({
+                /*await db.execute({
                     sql: "INSERT INTO posts (author, content) VALUES (?, ?)",
                     args: [author, finalContent]
-                });
+                });*/
                 
                 document.getElementById('postText').value = '';
                 window.removeImage(); 
@@ -680,7 +693,7 @@
             if (!passcode) return;
 
             try {
-                const ketQua = await fetch("https://db-info.giathinh260307.workers.dev", {
+                const ketQua = await fetch("https://db-connector.giathinh260307.workers.dev", {
                     method: "DELETE", 
                     headers: {
                         "Content-Type": "application/json",
