@@ -178,6 +178,7 @@
             border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
         .post-uploaded-image { max-width: 100%; border-radius: 15px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.2); }
+        
         /* =========================================
            THIẾT KẾ POPUP MA THUẬT
            ========================================= */
@@ -251,6 +252,286 @@
         }
 
         @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        
+        /* =========================================
+        TÍNH NĂNG MỚI: CHILL SPACE WIDGET 
+        ========================================= */
+        .chill-widget-container {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        /* Bong bóng Icon Tai Nghe */
+        .chill-bubble {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .chill-bubble:hover {
+            transform: scale(1.1) translateY(-5px);
+            box-shadow: 0 15px 35px rgba(255, 119, 169, 0.4);
+            border-color: var(--primary-pink);
+        }
+
+        .chill-bubble svg {
+            width: 40px;
+            height: 40px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+            animation: floatIcon 3s ease-in-out infinite;
+        }
+
+        @keyframes floatIcon {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-4px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* Bảng Chill Space */
+        .chill-panel {
+            width: 300px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: var(--glass-shadow);
+            margin-bottom: 15px;
+            color: var(--text-light);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px) scale(0.95);
+            transform-origin: bottom left; /* Đổi thành bottom left vì popup nằm bên trái */
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .chill-panel.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .chill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+        }
+
+        .chill-header h3 {
+            font-family: 'Comfortaa', cursive;
+            color: var(--primary-pink);
+            margin: 0;
+            font-size: 1.3rem;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .chill-close {
+            font-size: 1.8rem;
+            line-height: 1;
+            cursor: pointer;
+            transition: color 0.2s;
+            color: var(--text-light);
+        }
+
+        .chill-close:hover {
+            color: var(--primary-pink);
+        }
+
+        /* Dropdown Lists (Accordion) */
+        .chill-dropdown {
+            margin-bottom: 12px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+
+        .chill-dropdown summary {
+            padding: 12px 16px;
+            font-weight: bold;
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+            user-select: none;
+        }
+
+        .chill-dropdown summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .chill-dropdown summary:hover {
+            background: rgba(255, 119, 169, 0.2);
+        }
+
+        .chill-dropdown summary::after {
+            content: '▼';
+            font-size: 0.8rem;
+            color: var(--soft-pink);
+            transition: transform 0.3s;
+        }
+
+        .chill-dropdown[open] summary::after {
+            transform: rotate(180deg);
+        }
+
+        .chill-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 160px;
+            overflow-y: auto;
+        }
+
+        .chill-list::-webkit-scrollbar { width: 5px; }
+        .chill-list::-webkit-scrollbar-track { background: transparent; }
+        .chill-list::-webkit-scrollbar-thumb { background: var(--primary-pink); border-radius: 10px; }
+
+        .chill-list li {
+            padding: 12px 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .chill-list li:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding-left: 22px;
+            border-left: 3px solid var(--primary-pink);
+        }
+        /* =========================================
+   THIẾT KẾ TRÌNH PHÁT NHẠC (ĐĨA XOAY & SLIDE)
+   ========================================= */
+        .chill-player-wrapper {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Chỉnh lại bubble để chứa đĩa nhạc bên trong */
+        .chill-bubble {
+            position: relative;
+            overflow: hidden; /* Để ảnh đĩa nhạc không bị tràn ra ngoài góc tròn */
+            z-index: 2;
+        }
+
+        .chill-bubble svg {
+            position: relative;
+            z-index: 2; /* Đảm bảo tai nghe luôn nằm đè lên đĩa nhạc */
+        }
+
+        /* Đĩa nhạc xoay */
+        .spinning-record {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            opacity: 0; /* Ẩn khi chưa bật nhạc */
+            transition: opacity 0.4s ease;
+            animation: spinRecord 4s linear infinite;
+            filter: brightness(0.6); /* Làm tối ảnh một chút để đường nét tai nghe màu hồng nổi bật lên */
+            z-index: 1;
+        }
+
+        .spinning-record.active { opacity: 1; }
+        .spinning-record.paused { animation-play-state: paused; }
+
+        @keyframes spinRecord { 100% { transform: rotate(360deg); } }
+
+        /* Khung thông tin bài hát trượt ra */
+        .chill-song-info {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: 0 20px 20px 0; /* Bo tròn góc phải */
+            padding: 12px 0; /* Ban đầu không có padding ngang */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 0;
+            opacity: 0;
+            overflow: hidden;
+            transform: translateX(-30px); /* Kéo lùi vào trong icon */
+            margin-left: -15px; /* Giấu mép vào sau icon */
+            z-index: 1;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            white-space: nowrap;
+        }
+
+        .chill-song-info.active {
+            width: 220px;
+            padding: 12px 20px 12px 25px;
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .chill-song-title {
+            color: var(--primary-pink);
+            font-weight: 900;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .chill-progress-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chill-progress-bar {
+            flex-grow: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .chill-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--primary-pink);
+            border-radius: 5px;
+            transition: width 0.1s linear;
+        }
+
+        .chill-time-remaining {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            min-width: 40px;
+            text-align: right;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -325,7 +606,82 @@
         </div>
     </div>
 
-    <script>
+    <div id="magic-popup-overlay">
+        <div class="magic-popup-box">
+            <div class="chat-bubble">
+                <p class="popup-message" id="popup-msg-text">Nội dung thông báo</p>
+                <input type="password" id="popup-pass-input" class="popup-input" placeholder="Nhập mật mã...">
+                <div class="popup-buttons">
+                    <button class="popup-btn-cancel" id="popup-btn-no">Hủy bỏ</button>
+                    <button id="popup-btn-yes" style="border:none; padding: 10px 20px; border-radius: 20px; cursor: pointer;">Xác nhận</button>
+                </div>
+            </div>
+            <div class="guardian-character">
+                <div class="guardian-avatar">
+                    <img src="./imgs/miku_crying.png" alt="Guardian" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                </div>
+                <div class="guardian-name">Miku Defender</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="chill-widget-container">
+        <div class="chill-panel" id="chillPanel">
+            <div class="chill-header">
+                <h3>✨ Chill Space</h3>
+                <span class="chill-close" onclick="toggleChillSpace()">×</span>
+            </div>
+            
+            <details class="chill-dropdown">
+                <summary>🎧 Music</summary>
+                <ul class="chill-list">
+                    <li onclick="selectChillMusic('./music/C418 - BlindSpots.mp3', 'C418 - BlindSpots', './imgs/GrassBlock.png')">🎶 C418 - BlindSpots</li>
+                    <li onclick="selectChillMusic('./music/Khaim - Mad Trick.mp3', 'Khaim - Mad Trick', './imgs/Khaim-Mad Trick.jpg')">🌧️ Acoustic Raindrops</li>
+                    <li onclick="selectChillMusic('./music/Resonance.mp3', 'Resonance', './imgs/Resonance.png')">🚀 Cosmic Synthwave</li>
+                    <li onclick="selectChillMusic('./music/Nuts Instrumental.mp3', 'Nuts Instrumental', './imgs/Nuts Instrumental.jpg')">🚀 Cosmic Synthwave</li>
+                    <li onclick="selectChillMusic('./music/HoYoHoYo.mp3', 'HoYoHoYo', './imgs/HoYoHoYo.jpg')">🚀 Cosmic Synthwave</li>
+                </ul>
+            </details>
+
+            <details class="chill-dropdown">
+                <summary>🌌 Backgrounds</summary>
+                <ul class="chill-list">
+                    <li onclick="selectChillBackground('./imgs/sky.jpg')">🌠 Starry Anime Sky</li>
+                    <li onclick="selectChillBackground('./imgs/sakura.gif')">🌸 Falling Sakura</li>
+                    <li onclick="selectChillBackground('none')" style="color: #ff4d4d;">🚫 Xóa phông nền</li>
+                </ul>
+            </details>
+            
+            <audio id="chillAudio" loop></audio>
+        </div>
+
+        <div class="chill-player-wrapper">
+            <div class="chill-bubble" onclick="toggleChillSpace()">
+                <img id="chill-record-img" src="" alt="Record" class="spinning-record">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M 25 45 A 25 25 0 0 1 75 45" fill="none" stroke="var(--primary-pink)" stroke-width="5" stroke-linecap="round"/>
+                    <rect x="15" y="40" width="14" height="26" rx="7" fill="var(--primary-pink)" />
+                    <rect x="19" y="43" width="6" height="20" rx="3" fill="var(--soft-pink)" />
+                    <rect x="71" y="40" width="14" height="26" rx="7" fill="var(--primary-pink)" />
+                    <rect x="75" y="43" width="6" height="20" rx="3" fill="var(--soft-pink)" />
+                    <path d="M 30 20 L 38 6 L 46 16 Z" fill="var(--soft-pink)" stroke="var(--primary-pink)" stroke-width="2.5" stroke-linejoin="round"/>
+                    <path d="M 70 20 L 62 6 L 54 16 Z" fill="var(--soft-pink)" stroke="var(--primary-pink)" stroke-width="2.5" stroke-linejoin="round"/>
+                </svg>
+            </div>
+
+            <div class="chill-song-info" id="chillSongInfo">
+                <div class="chill-song-title" id="chillSongTitle">Đang chờ nhạc...</div>
+                <div class="chill-progress-wrapper">
+                    <div class="chill-progress-bar">
+                        <div class="chill-progress-fill" id="chillProgressFill"></div>
+                    </div>
+                    <div class="chill-time-remaining" id="chillTimeRemaining">-0:00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+     <script>
+        // --- LOGIC GIAO DIỆN & ANIMATION CŨ ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const popupTexts = ["Kya! (≧◡≦)", "UwU", "Baka~ (＃￣ω￣)", "💕", "Nyaha!", "Stop it! ✨"];
 
@@ -361,14 +717,14 @@
                 document.getElementById('postText').focus(); 
             } else { 
                 modal.classList.remove('active'); 
-                if(window.removeImage) window.removeImage(); // Dọn dẹp ảnh nếu bấm Hủy
+                if(window.removeImage) window.removeImage(); 
             }
         }
 
         function checkCloseModal(e) { if (e.target.id === 'postModal') toggleModal(false); }
 
         async function callGeminiAPI(prompt, retries = 5) {
-            const apiKey = ""; // Điền key nếu muốn dùng Hóa phép AI
+            const apiKey = ""; 
             if(!apiKey) return "Senpai chưa gắn lõi năng lượng Gemini (API Key) kìa! (╥﹏╥)";
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             const payload = { contents: [{ parts: [{ text: prompt }] }], systemInstruction: { parts: [{ text: "Bạn là nhân vật anime. Trả lời vui vẻ, cute." }] } };
@@ -427,27 +783,88 @@
             requestAnimationFrame(animate);
         }
         resize(); animate();
-    </script>
 
-    <!-- HỘP THOẠI POPUP MA THUẬT -->
-    <div id="magic-popup-overlay">
-        <div class="magic-popup-box">
-            <div class="chat-bubble">
-                <p class="popup-message" id="popup-msg-text">Nội dung thông báo</p>
-                <input type="password" id="popup-pass-input" class="popup-input" placeholder="Nhập mật mã...">
-                <div class="popup-buttons">
-                    <button class="popup-btn-cancel" id="popup-btn-no">Hủy bỏ</button>
-                    <button id="popup-btn-yes" style="border:none; padding: 10px 20px; border-radius: 20px; cursor: pointer;">Xác nhận</button>
-                </div>
-            </div>
-            <div class="guardian-character">
-                <div class="guardian-avatar">
-                    <img src="./imgs/miku_crying.png" alt="Guardian" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                </div>
-                <div class="guardian-name">Miku Defender</div>
-            </div>
-        </div>
-    </div>
+        // --- LOGIC CHILL SPACE MỚI ---
+        function toggleChillSpace() {
+            const panel = document.getElementById('chillPanel');
+            panel.classList.toggle('active');
+        }
+
+        // Đổi hình nền
+        function selectChillBackground(bgPath) {
+            if (bgPath === 'none') {
+                document.body.style.backgroundImage = 'none';
+            } else {
+                document.body.style.backgroundImage = `url('${bgPath}')`;
+                document.body.style.backgroundSize = 'cover';
+                document.body.style.backgroundPosition = 'center';
+                document.body.style.backgroundAttachment = 'fixed';
+                document.body.style.backgroundColor = '#1a0b2e'; 
+            }
+        }
+
+        // Logic phát nhạc, quay đĩa và trượt thanh thông tin
+        function selectChillMusic(audioPath, title, coverImgPath) {
+            const audio = document.getElementById('chillAudio');
+            const recordImg = document.getElementById('chill-record-img');
+            const songInfo = document.getElementById('chillSongInfo');
+            const songTitle = document.getElementById('chillSongTitle');
+            
+            // Nếu bấm lại bài ĐANG PHÁT -> Tạm dừng hoặc phát tiếp
+            if (audio.src.includes(audioPath.replace('./', ''))) {
+                if (!audio.paused) {
+                    audio.pause();
+                    recordImg.classList.add('paused'); // Dừng xoay
+                } else {
+                    audio.play().catch(e => console.error(e));
+                    recordImg.classList.remove('paused'); // Xoay tiếp
+                }
+            } else {
+                // Bấm bài MỚI
+                audio.src = audioPath;
+                audio.play().catch(e => console.error("Lỗi phát nhạc:", e));
+                
+                // Cập nhật UI
+                recordImg.src = coverImgPath;
+                recordImg.classList.add('active'); // Hiện đĩa nhạc
+                recordImg.classList.remove('paused'); // Bắt đầu xoay
+                
+                songTitle.innerText = title;
+                songInfo.classList.add('active'); // Trượt thanh thông tin ra
+            }
+        }
+
+        // Lắng nghe tiến trình bài hát để chạy thanh Progress Bar
+        document.addEventListener('DOMContentLoaded', () => {
+            const audio = document.getElementById('chillAudio');
+            const progressFill = document.getElementById('chillProgressFill');
+            const timeRemainingText = document.getElementById('chillTimeRemaining');
+
+            audio.addEventListener('timeupdate', () => {
+                if(!isNaN(audio.duration)) {
+                    // Tính phần trăm để kéo dài vệt màu
+                    const progressPercent = (audio.currentTime / audio.duration) * 100;
+                    progressFill.style.width = `${progressPercent}%`;
+
+                    // Tính thời gian còn lại
+                    const remaining = audio.duration - audio.currentTime;
+                    const mins = Math.floor(remaining / 60);
+                    const secs = Math.floor(remaining % 60);
+                    // Hiển thị dạng -2:05
+                    timeRemainingText.innerText = `-${mins}:${secs < 10 ? '0' : ''}${secs}`;
+                }
+            });
+        });
+
+        // Tự động đóng bảng nếu click ra ngoài
+        document.addEventListener('click', (e) => {
+            const container = document.querySelector('.chill-widget-container');
+            const panel = document.getElementById('chillPanel');
+            if (container && !container.contains(e.target) && panel.classList.contains('active')) {
+                panel.classList.remove('active');
+            }
+        });
+    </script>
 
     <script type="module">
         import { createClient } from "https://esm.sh/@libsql/client/web";
@@ -512,9 +929,8 @@
         }
 
         // --- XỬ LÝ CHỌN VÀ NÉN ẢNH ---
-// --- CỖ MÁY XỬ LÝ VÀ NÉN ẢNH (Dùng chung cho cả Chọn file và Paste) ---
         window.processImageFile = function(file) {
-            if (!file || !file.type.startsWith('image/')) return; // Không phải ảnh thì bỏ qua
+            if (!file || !file.type.startsWith('image/')) return; 
 
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -545,27 +961,22 @@
             reader.readAsDataURL(file);
         }
 
-        // 1. Khi người dùng bấm nút chọn ảnh từ máy tính
         window.handleImageSelect = function(event) {
             const file = event.target.files[0];
             window.processImageFile(file);
         }
 
-        // 2. TÍNH NĂNG MỚI: Bắt sự kiện Paste (Ctrl+V) ảnh từ Clipboard
         document.addEventListener('paste', function(e) {
-            // Chỉ bắt sự kiện paste ảnh khi bảng Đăng bài (Modal) đang được mở
             const modal = document.getElementById('postModal');
             if (!modal.classList.contains('active')) return;
 
             const items = (e.clipboardData || window.clipboardData).items;
             for (let index in items) {
                 const item = items[index];
-                // Nếu dữ liệu dán vào là một tệp hình ảnh
                 if (item.kind === 'file' && item.type.startsWith('image/')) {
                     const file = item.getAsFile();
                     window.processImageFile(file);
                     
-                    // Nháy viền xanh nhẹ để báo hiệu paste thành công
                     const previewContainer = document.getElementById('imagePreviewContainer');
                     previewContainer.style.boxShadow = '0 0 20px #00ff88';
                     setTimeout(() => previewContainer.style.boxShadow = 'none', 500);
@@ -573,7 +984,6 @@
             }
         });
 
-        // --- HÀM XÓA ẢNH ---
         window.removeImage = function() {
             currentBase64Image = null;
             document.getElementById('postImage').value = '';
@@ -634,7 +1044,7 @@
             }
         }
 
-        // --- ĐĂNG BÀI (HỖ TRỢ VĂN BẢN + ẢNH) ---
+        // --- ĐĂNG BÀI ---
         window.submitPost = async function() {
             const author = document.getElementById('postAuthor').value || 'Anonymous';
             const text = document.getElementById('postText').value;
@@ -662,21 +1072,19 @@
                 await window.fetchPosts(); 
                 
             } catch (error) {
-                await magicPopup("Lỗi khi đăng: " + error.message, "alert");
+                await window.magicPopup("Lỗi khi đăng: " + error.message, "alert");
             } finally {
                 btn.innerText = "🚀 Đăng bài";
                 btn.disabled = false;
             }
         }
 
-        // --- XÓA BÀI + HIỆU ỨNG VỠ KÍNH ---
+        // --- XÓA BÀI ---
         window.deletePost = async function(postId) {
-            // Thay thế hàm confirm()
-            const isSure = await magicPopup("Bạn có chắc chắn muốn ném bài viết này<br>vào hố đen vũ trụ không?", "confirm");
+            const isSure = await window.magicPopup("Bạn có chắc chắn muốn ném bài viết này<br>vào hố đen vũ trụ không?", "confirm");
             if (!isSure) return;
 
-            // Thay thế hàm prompt()
-            const passcode = await magicPopup("Nhập mật mã Quản trị viên<br>để thi triển ma pháp phá hủy:", "prompt");
+            const passcode = await window.magicPopup("Nhập mật mã Quản trị viên<br>để thi triển ma pháp phá hủy:", "prompt");
             if (!passcode) return;
 
             try {
@@ -690,19 +1098,15 @@
                 });
 
                 if (!ketQua.ok){ 
-                    // Thay thế hàm alert()
-                    await magicPopup("Mật mã sai!<br>Kẻ xâm nhập đã bị phát hiện. (＃￣ω￣)", "alert");
+                    await window.magicPopup("Mật mã sai!<br>Kẻ xâm nhập đã bị phát hiện. (＃￣ω￣)", "alert");
                     return; 
                 }
 
-                // HIỆU ỨNG XOÁ 
-
-            const wrapper = document.getElementById(`post-wrapper-${postId}`);
-            const article = document.getElementById(`post-article-${postId}`);
+                const wrapper = document.getElementById(`post-wrapper-${postId}`);
+                const article = document.getElementById(`post-article-${postId}`);
             
                 if (wrapper && article) {
                     const rect = article.getBoundingClientRect();
-                    
                     const polygons = [
                         'polygon(0% 0%, 100% 0%, 50% 50%)', 
                         'polygon(100% 0%, 100% 100%, 50% 50%)',
@@ -713,7 +1117,6 @@
                     polygons.forEach((poly, index) => {
                         const shard = article.cloneNode(true);
                         shard.id = ''; 
-                        
                         shard.style.position = 'fixed';
                         shard.style.top = rect.top + 'px';
                         shard.style.left = rect.left + 'px';
@@ -726,7 +1129,6 @@
                         shard.style.transformOrigin = 'center';
                         
                         document.body.appendChild(shard);
-
                         shard.offsetHeight;
 
                         const moveX = (index === 1 ? 100 : (index === 3 ? -100 : 0)) + (Math.random() * 60 - 30);
@@ -740,23 +1142,17 @@
                     });
 
                     article.style.display = 'none';
-                    
                     wrapper.style.height = rect.height + 'px';
                     wrapper.style.overflow = 'hidden';
                     wrapper.style.transition = 'all 0.5s ease-in-out';
-                    
                     wrapper.offsetHeight; 
-                    
                     wrapper.style.height = '0';
                     wrapper.style.marginBottom = '0';
                     wrapper.style.opacity = '0';
                 }
-
-                //setTimeout(() => { window.fetchPosts(); }, 800);
-
             } catch (error) {
                 console.error("Lỗi khi xóa bài:", error);
-                await magicPopup("Lỗi không thể xóa: " + error.message, "alert");
+                await window.magicPopup("Lỗi không thể xóa: " + error.message, "alert");
             }
         }
     </script>
