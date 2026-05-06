@@ -455,7 +455,7 @@
         // =========================================================================
         // ⚠️ ĐIỀN THÔNG TIN TURSO DATABASE CỦA BẠN VÀO ĐÂY
         // =========================================================================
-        const WORKER_URL = 'https://db-connector.giathinh260307.workers.dev/';
+        const WORKER_URL = 'https://db-info.giathinh260307.workers.dev/';
         const DB_TOKEN = 'aHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj1kUXc0dzlXZ1hjUQ=='; 
 
         let db;
@@ -587,7 +587,7 @@
         window.fetchPosts = async function() {
             const feed = document.getElementById('feed-container');
             try {
-                const response = await fetch("https://db-connector.giathinh260307.workers.dev/api/posts");
+                const response = await fetch("https://db-info.giathinh260307.workers.dev/api/posts");
                 const result = await response.json();
                 
                 feed.innerHTML = '';
@@ -658,7 +658,7 @@
                 }
                 
                 // Gửi dữ liệu đến API Worker để lưu vào Turso DB
-                await fetch("https://db-connector.giathinh260307.workers.dev/api/posts", {
+                await fetch("https://db-info.giathinh260307.workers.dev/api/posts", {
                     method: "POST", 
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload) // Biến object thành chuỗi chữ để gửi đi
@@ -693,7 +693,7 @@
             if (!passcode) return;
 
             try {
-                const ketQua = await fetch("https://db-connector.giathinh260307.workers.dev", {
+                const ketQua = await fetch("https://db-info.giathinh260307.workers.dev", {
                     method: "DELETE", 
                     headers: {
                         "Content-Type": "application/json",
