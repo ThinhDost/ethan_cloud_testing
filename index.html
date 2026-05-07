@@ -532,9 +532,35 @@
             text-align: right;
             font-weight: bold;
         }
+        #bg-video {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            object-fit: cover; z-index: -2; opacity: 0;
+            transition: opacity 1s ease-in-out; pointer-events: none;
+            filter: brightness(0.4); /* Làm tối video đi để chữ trên web hiện rõ */
+        }
+        #bg-video.active { opacity: 1; }
+
+        /* Quan trọng: Khi có class playing, cái tai mèo SVG sẽ biến mất */
+        .chill-bubble.playing svg { display: none; }
+        /* ----- BỨC MÀN CHỨA HÌNH NỀN TĨNH ----- */
+        #bg-image-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: -3; /* Nằm dưới cùng, dưới cả video */
+            background-color: var(--bg-color); /* Màu tím mặc định */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            opacity: 1;
+            transition: opacity 0.8s ease-in-out; /* Thời gian fade là 0.8 giây */
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
+    <video id="bg-video" loop muted playsinline></video>
+    <div id="bg-image-container"></div>
 
     <canvas id="bg-canvas"></canvas>
 
@@ -641,6 +667,7 @@
                     <li onclick="selectChillMusic('./music/Nuts Instrumental.mp3', 'Nuts Instrumental', './imgs/Nuts Instrumental.jpg')">🚀 Nuts Instrumental</li>
                     <li onclick="selectChillMusic('./music/HoYoHoYo.mp3', 'HoYoHoYo', './imgs/HoYoHoYo.jpg')">🚀 HoYoHoYo</li>
                     <li onclick="selectChillMusic('./music/Minecraft.mp3', 'Minecraft', './imgs/minecraft.png')">🚀 Minecraft</li>
+                    <li onclick="selectChillMusic('./music/Anamanaguchi - Miku.mp3', 'Anamanaguchi - Miku', './imgs/Anamanaguchi - Miku.jpg')">🚀 Anamanaguchi - Miku</li>
                 </ul>
             </details>
 
@@ -786,53 +813,128 @@
         resize(); animate();
 
         // --- LOGIC CHILL SPACE MỚI ---
+       // --- LOGIC CHILL SPACE ---
         function toggleChillSpace() {
             const panel = document.getElementById('chillPanel');
-            panel.classList.toggle('active');
+            if (panel) panel.classList.toggle('active');
         }
 
-        // Đổi hình nền
-        function selectChillBackground(bgPath) {
-            if (bgPath === 'none') {
-                document.body.style.backgroundImage = 'none';
-            } else {
-                document.body.style.backgroundImage = `url('${bgPath}')`;
-                document.body.style.backgroundSize = 'cover';
-                document.body.style.backgroundPosition = 'center';
-                document.body.style.backgroundAttachment = 'fixed';
-                document.body.style.backgroundColor = '#1a0b2e'; 
-            }
-        }
+        // --- DANH SÁCH VIDEO KÈM BÀI HÁT ---
+        // Điền tên bài hát (giống hệt tên ở phần HTML) và link video mp4 trong máy bạn
+        const musicVideos = {
+            'HoYoHoYo': 'https://files.catbox.moe/mdyu13.mp4', 
+            // Nếu bài nào không khai báo ở đây, nó sẽ tự hiểu là không có video
+        };
 
-        // Logic phát nhạc, quay đĩa và trượt thanh thông tin
+        const musicImages = {
+            'Anamanaguchi - Miku': './imgs/Anamanaguchi - Miku.jpg', // Dùng link web
+            'Khaim - Mad Trick': './imgs/Khaim-Madtrick.jpg', // Hoặc dùng file ảnh trong máy
+            'Resonance': './imgs/Resonance.png',
+            // Các bài hát muốn hiện ảnh tĩnh thì điền vào đây
+        };
+
+        // --- 1. HÀM PHÁT NHẠC (ĐÃ THÊM FADE IN/OUT) ---
         function selectChillMusic(audioPath, title, coverImgPath) {
             const audio = document.getElementById('chillAudio');
+            const bgVideo = document.getElementById('bg-video');
+            const bgImageContainer = document.getElementById('bg-image-container'); // Gọi bức màn ra
             const recordImg = document.getElementById('chill-record-img');
             const songInfo = document.getElementById('chillSongInfo');
             const songTitle = document.getElementById('chillSongTitle');
+            const bubble = document.querySelector('.chill-bubble'); 
             
-            // Nếu bấm lại bài ĐANG PHÁT -> Tạm dừng hoặc phát tiếp
             if (audio.src.includes(audioPath.replace('./', ''))) {
+                // Đang phát -> Play/Pause
                 if (!audio.paused) {
                     audio.pause();
-                    recordImg.classList.add('paused'); // Dừng xoay
+                    if(bgVideo) bgVideo.pause();
+                    if(recordImg) recordImg.classList.add('paused');
                 } else {
                     audio.play().catch(e => console.error(e));
-                    recordImg.classList.remove('paused'); // Xoay tiếp
+                    if(bgVideo && bgVideo.src) bgVideo.play();
+                    if(recordImg) recordImg.classList.remove('paused');
                 }
             } else {
                 // Bấm bài MỚI
                 audio.src = audioPath;
-                audio.play().catch(e => console.error("Lỗi phát nhạc:", e));
+                audio.play().catch(e => console.error(e));
+                
+                if (bgVideo) {
+                    if (musicVideos && musicVideos[title]) {
+                        // TRƯỜNG HỢP 1: CÓ VIDEO
+                        bgVideo.src = musicVideos[title];
+                        bgVideo.play();
+                        bgVideo.classList.add('active');
+                        bgImageContainer.style.opacity = 0; // Làm mờ màn ảnh tĩnh đi
+                    } 
+                    else if (musicImages && musicImages[title]) {
+                        // TRƯỜNG HỢP 2: CÓ ẢNH TĨNH
+                        bgVideo.classList.remove('active');
+                        setTimeout(() => bgVideo.pause(), 1000); 
+                        
+                        bgImageContainer.style.opacity = 0; // 1. Fade out mờ đi
+                        setTimeout(() => {
+                            // 2. Tráo ảnh phía sau lưng
+                            bgImageContainer.style.backgroundImage = `url('${musicImages[title]}')`;
+                            bgImageContainer.style.opacity = 1; // 3. Fade in hiện rõ lên
+                        }, 800); // 800ms khớp với CSS
+                    } 
+                    else {
+                        // TRƯỜNG HỢP 3: KHÔNG CÓ GÌ -> VỀ NỀN MẶC ĐỊNH
+                        bgVideo.classList.remove('active');
+                        setTimeout(() => bgVideo.pause(), 1000);
+                        
+                        bgImageContainer.style.opacity = 0; // 1. Fade out
+                        setTimeout(() => {
+                            bgImageContainer.style.backgroundImage = 'none';
+                            bgImageContainer.style.backgroundColor = 'var(--bg-color)';
+                            bgImageContainer.style.opacity = 1; // 2. Fade in
+                        }, 800);
+                    }
+                }
                 
                 // Cập nhật UI
-                recordImg.src = coverImgPath;
-                recordImg.classList.add('active'); // Hiện đĩa nhạc
-                recordImg.classList.remove('paused'); // Bắt đầu xoay
-                
-                songTitle.innerText = title;
-                songInfo.classList.add('active'); // Trượt thanh thông tin ra
+                if(recordImg) {
+                    recordImg.src = coverImgPath;
+                    recordImg.classList.add('active'); 
+                    recordImg.classList.remove('paused'); 
+                }
+                if(songTitle) songTitle.innerText = title;
+                if(songInfo) songInfo.classList.add('active'); 
+                if(bubble) bubble.classList.add('playing'); 
             }
+        }
+
+        // --- 2. HÀM ĐỔI HÌNH NỀN TĨNH (ĐÃ THÊM FADE IN/OUT) ---
+        function selectChillBackground(bgPath) {
+            const bgVideo = document.getElementById('bg-video');
+            const bgImageContainer = document.getElementById('bg-image-container'); // Gọi bức màn ra
+            const bubble = document.querySelector('.chill-bubble');
+            const audio = document.getElementById('chillAudio');
+
+            if(bgVideo) {
+                bgVideo.classList.remove('active');
+                setTimeout(() => bgVideo.pause(), 1000);
+            }
+
+            // Hiệu ứng Fade out (Làm mờ bức màn hiện tại trước)
+            bgImageContainer.style.opacity = 0;
+
+            // Chờ 0.8 giây rồi mới đổi ảnh và Fade in lên
+            setTimeout(() => {
+                if (bgPath === 'none') {
+                    bgImageContainer.style.backgroundImage = 'none';
+                    bgImageContainer.style.backgroundColor = 'var(--bg-color)';
+                    if(bubble) bubble.classList.remove('playing'); 
+                    if(audio) audio.pause(); 
+                } else {
+                    bgImageContainer.style.backgroundImage = `url('${bgPath}')`;
+                    bgImageContainer.style.backgroundColor = '#1a0b2e'; 
+                }
+                
+                // Kéo màn lên lại (Fade in)
+                bgImageContainer.style.opacity = 1;
+            }, 800);
         }
 
         // Lắng nghe tiến trình bài hát để chạy thanh Progress Bar
@@ -868,19 +970,19 @@
     </script>
 
     <script type="module">
-
+        import { createClient } from "https://esm.sh/@libsql/client/web";
 
         // =========================================================================
         // ⚠️ ĐIỀN THÔNG TIN TURSO DATABASE CỦA BẠN VÀO ĐÂY
         // =========================================================================
-        const WORKER_URL = 'https://db-info.giathinh260307.workers.dev/';
-        const TURSO_TOKEN = 'aHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj1kUXc0dzlXZ1hjUQ=='; 
+        const TURSO_URL = 'https://db-info.giathinh260307.workers.dev/';
+        const TURSO_TOKEN = 'aHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj1kUXc0dzlXZ1hjUQ==';
 
         let db;
         let currentBase64Image = null;
 
         try {
-           
+            db = createClient({ url: TURSO_URL, authToken: TURSO_TOKEN });
             // HÀM ĐIỀU KHIỂN POPUP MA THUẬT
             window.magicPopup = function(message, type = 'alert') {
                 return new Promise((resolve) => {
@@ -997,48 +1099,53 @@
         }
         window.fetchPosts = async function() {
             const feed = document.getElementById('feed-container');
-            const response = await fetch("https://db-info.giathinh260307.workers.dev/api/posts");
-            const tursoData = await response.json();
+            try {
+                const result = await db.execute("SELECT * FROM posts ORDER BY created_at DESC");
+                feed.innerHTML = ''; 
                 
-                try {
-                // 1. "Móc" vào đúng ngăn chứa dữ liệu (Tương đương truy cập struct/map lồng nhau)
-                const dbResult = tursoData[0].response.result;
-                
-                // 2. Trích xuất danh sách tên cột: ["id", "author", "content", "created_at"]
-                const columns = dbResult.cols.map(c => c.name);
-                
-                // 3. Lắp ráp dữ liệu (Thuật toán "Khâu" dữ liệu ta đã bàn)
-                const cleanRows = dbResult.rows.map(rowArray => {
-                    let post = {};
-                    rowArray.forEach((cell, index) => {
-                        const columnName = columns[index];
-                        // Lấy giá trị thực tế, nếu là object {value: ...} thì lấy value
-                        post[columnName] = (cell && typeof cell === 'object') ? cell.value : cell;
-                    });
-                    return post;
-                });
+                if (result.rows.length === 0) {
+                     feed.innerHTML = '<div style="text-align: center; color: var(--soft-pink);">Chưa có bài viết nào. Hãy mở bát nhé!</div>';
+                     return;
+                }
 
-                // 4. Bây giờ bạn đã có cleanRows xịn xò, hãy dùng nó để vẽ giao diện
-                const postsContainer = document.getElementById('posts-container');
-                postsContainer.innerHTML = ''; // Xóa cũ thay mới
+                result.rows.forEach(post => {
+                    const safeauthor = escapeHTML(post.author) || 'Anonymous';
+                    const rawText = post.content || '';
+                    const safeContent = DOMPurify.sanitize(rawText);
+                    const date = new Date(post.created_at + "Z").toLocaleString('vi-VN');
+                    const postId = post.id;
 
-                cleanRows.forEach(post => {
-                    const postElement = document.createElement('div');
-                    postElement.className = 'post-card';
-                    postElement.innerHTML = `
-                        <h3>${post.author}</h3>
-                        <small>${post.created_at || ''}</small>
-                        <p>${post.content}</p>
+                    feed.innerHTML += `
+                        <div id="post-wrapper-${postId}" style="margin-bottom: 20px;">
+                            <article class="glass-panel" id="post-article-${postId}" style="margin-bottom: 0;">
+                                <div class="post-header">
+                                    <div class="avatar">${safeauthor.charAt(0).toUpperCase()}</div>
+                                    <div>
+                                        <h3 style="color: var(--soft-pink);">${safeauthor}</h3>
+                                        <span class="post-meta">Đăng lúc: ${date}</span>
+                                    </div>
+                                </div>
+                                <div class="post-content">
+                                    ${safeContent}
+                                </div>
+                                <div class="flex-between" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                                    <div>
+                                        <button class="liquid-btn" style="padding: 8px 15px; font-size: 0.9rem;">💖 Thích</button>
+                                        <button class="liquid-btn" style="padding: 8px 15px; font-size: 0.9rem;">💬 Bình luận</button>
+                                    </div>
+                                    <button class="liquid-btn" style="padding: 8px 15px; font-size: 0.9rem; background: rgba(255, 50, 50, 0.3); border-color: rgba(255, 50, 50, 0.5);" onclick="window.deletePost(${postId})">
+                                        🗑️ Xóa
+                                    </button>
+                                </div>
+                            </article>
+                        </div>
                     `;
-                    postsContainer.appendChild(postElement);
                 });
-
-            } catch (err) {
-                console.error("Lỗi khi bóc tách dữ liệu:", err);
-                alert("Không thể hiển thị bài viết do lỗi cấu trúc dữ liệu.");
+            } catch (error) {
+                console.error("Lỗi tải dữ liệu:", error);
+                feed.innerHTML = `<div style="text-align: center; color: red;">Lỗi tải dữ liệu. Lỗi chi tiết: ${error.message}</div>`;
             }
         }
-        
 
         // --- ĐĂNG BÀI ---
         window.submitPost = async function() {
@@ -1056,22 +1163,11 @@
                 if (currentBase64Image) {
                     finalContent += `<br><img src="${currentBase64Image}" class="post-uploaded-image">`;
                 }
-                
-                const payload =
-                {
-                    author: author,
-                    content: finalContent,
-                }
 
-                await fetch("https://db-info.giathinh260307.workers.dev/api/posts", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload) // Biến object thành chuỗi chữ để gửi đi
-                });
-                /*await db.execute({
+                await db.execute({
                     sql: "INSERT INTO posts (author, content) VALUES (?, ?)",
                     args: [author, finalContent]
-                });*/
+                });
                 
                 document.getElementById('postText').value = '';
                 window.removeImage(); 
