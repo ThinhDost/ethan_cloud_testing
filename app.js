@@ -16,7 +16,7 @@
 
         const Hiura_cow = document.getElementById('Hiura_interact');
         Hiura_cow.addEventListener('click', interactWaifu);
-        
+
         function interactWaifu(event) {
             playPopSound();
             const wrapper = document.getElementById('shelfWrapper');
@@ -129,6 +129,7 @@
         };
 
         // --- 1. HÀM PHÁT NHẠC (ĐÃ THÊM FADE IN/OUT) ---
+        
         function selectChillMusic(audioPath, title, coverImgPath) {
             const audio = document.getElementById('chillAudio');
             const bgVideo = document.getElementById('bg-video');
@@ -198,6 +199,18 @@
                 if(songInfo) songInfo.classList.add('active'); 
                 if(bubble) bubble.classList.add('playing'); 
             }
+        }
+        
+        const musicItems = document.querySelectorAll('.music-item');
+        musicItems.forEach(item => {
+            item.addEventListener('click', getInfoOfChillMusic);
+        });
+        function getInfoOfChillMusic()
+        {
+            const path = this.getAttribute('data-path');
+            const title = this.getAttribute('data-title');
+            const img = this.getAttribute('data-img');
+            selectChillMusic(path, title, img);
         }
 
         // --- 2. HÀM ĐỔI HÌNH NỀN TĨNH (ĐÃ THÊM FADE IN/OUT) ---
