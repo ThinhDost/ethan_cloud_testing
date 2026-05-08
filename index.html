@@ -19,7 +19,7 @@
 
     <div class="shelf-wrapper" id="shelfWrapper">
         <div class="static-bubble">&gt;.&lt;</div>
-        <img src="./imgs/Hiura_cow.png" alt="Manga Character" class="shelf-waifu" onclick="interactWaifu(event)" onerror="this.src='https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Cat%20with%20Wry%20Smile.png';">
+        <img src="./imgs/Hiura_cow.png" alt="Manga Character" class="shelf-waifu" id="Hiura_interact" onerror="this.src='https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Cat%20with%20Wry%20Smile.png';">
         <div class="glass-shelf"></div>
     </div>
 
@@ -137,7 +137,7 @@
         </div>
 
         <div class="chill-player-wrapper">
-            <div class="chill-bubble" onclick="toggleChillSpace()">
+            <div class="chill-bubble" id="chillBubble">
                 <img id="chill-record-img" src="" alt="Record" class="spinning-record">
                 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                     <path d="M 25 45 A 25 25 0 0 1 75 45" fill="none" stroke="var(--primary-pink)" stroke-width="5" stroke-linecap="round"/>

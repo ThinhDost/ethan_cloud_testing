@@ -14,6 +14,9 @@
             osc.start(); osc.stop(audioCtx.currentTime + 0.1);
         }
 
+        const Hiura_cow = document.getElementById('Hiura_interact');
+        Hiura_cow.addEventListener('click', interactWaifu);
+        
         function interactWaifu(event) {
             playPopSound();
             const wrapper = document.getElementById('shelfWrapper');
@@ -103,6 +106,9 @@
 
         // --- LOGIC CHILL SPACE MỚI ---
        // --- LOGIC CHILL SPACE ---
+        const chillBubble = document.getElementById('chillBubble');
+        chillBubble.addEventListener('click', toggleChillSpace);
+       
         function toggleChillSpace() {
             const panel = document.getElementById('chillPanel');
             if (panel) panel.classList.toggle('active');
