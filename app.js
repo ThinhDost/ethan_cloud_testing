@@ -108,6 +108,8 @@
        // --- LOGIC CHILL SPACE ---
         const chillBubble = document.getElementById('chillBubble');
         chillBubble.addEventListener('click', toggleChillSpace);
+        const ChillCloseBtn = document.getElementById('chillClose');
+        if(ChillCloseBtn) ChillCloseBtn.addEventListener('click', toggleChillSpace);
        
         function toggleChillSpace() {
             const panel = document.getElementById('chillPanel');
@@ -200,7 +202,7 @@
                 if(bubble) bubble.classList.add('playing'); 
             }
         }
-        
+        //Duyệt qua từng item trong playlist để gắn sự kiện click,khi click sẽ gọi hàm getInfoOfChillMusic để lấy thông tin bài hát và truyền vào hàm selectChillMusic
         const musicItems = document.querySelectorAll('.music-item');
         musicItems.forEach(item => {
             item.addEventListener('click', getInfoOfChillMusic);
