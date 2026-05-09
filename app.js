@@ -34,6 +34,9 @@
         const createPostBtn = document.getElementById('createPostBtn');
         createPostBtn.addEventListener('click', () => toggleModal(true));
 
+        const cancelBtn = document.getElementById('cancelBtn');
+        cancelBtn.addEventListener('click', () => toggleModal(false));
+        
         function toggleModal(show) {
             const modal = document.getElementById('postModal');
             if(show) { 
@@ -45,6 +48,8 @@
             }
         }
 
+        const modalOverlay = document.getElementById('postModal');
+        modalOverlay.addEventListener('click', checkCloseModal);
         function checkCloseModal(e) { if (e.target.id === 'postModal') toggleModal(false); }
 
         async function callGeminiAPI(prompt, retries = 5) {
