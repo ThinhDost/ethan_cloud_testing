@@ -31,6 +31,8 @@
         }
 
         
+        const createPostBtn = document.getElementById('createPostBtn');
+        createPostBtn.addEventListener('click', () => toggleModal(true));
 
         function toggleModal(show) {
             const modal = document.getElementById('postModal');
