@@ -30,12 +30,8 @@
             setTimeout(() => { newBubble.remove(); }, 3500);
         }
 
-        const createPostBtn = document.getElementById('createPostBtn');
-        createPostBtn.addEventListener('click', () => toggleModal(true));
-        const modalCloseBtn = document.getElementById('modalCloseBtn');
-        modalCloseBtn.addEventListener('click', () => toggleModal(false));
-        document.getElementById('postModal').addEventListener('click', checkCloseModal);
         
+
         function toggleModal(show) {
             const modal = document.getElementById('postModal');
             if(show) { 
