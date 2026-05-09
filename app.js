@@ -36,7 +36,7 @@
 
         const cancelBtn = document.getElementById('cancelBtn');
         cancelBtn.addEventListener('click', () => toggleModal(false));
-        
+
         function toggleModal(show) {
             const modal = document.getElementById('postModal');
             if(show) { 
@@ -575,5 +575,19 @@ import { createClient } from "https://esm.sh/@libsql/client/web";
             } catch (error) {
                 console.error("Lỗi khi xóa bài:", error);
                 await window.magicPopup("Lỗi không thể xóa: " + error.message, "alert");
+            }
+        }
+        let toggle = false;
+        const toggleTestButton = document.getElementById('testtogglebtn');
+        toggleTestButton.addEventListener('click', toggleTest);
+
+        function toggleTest() {
+            toggle = !toggle;
+            if(toggle) {
+                document.body.style.background = 'red';
+                toggleTestButton.innerText = "Bật lại màu cũ";
+            } else {
+                document.body.style.background = '';
+                toggleTestButton.innerText = "Toggle Button";
             }
         }
