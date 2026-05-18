@@ -46,7 +46,7 @@
 
     <main class="container">
         <div style="text-align: center; margin-bottom: 40px;">
-            <button class="liquid-btn" onclick="toggleModal(true)">
+            <button class="liquid-btn" id="createPostBtn"">
                 ✨ Khởi tạo dòng trạng thái...
             </button>
         </div>
@@ -56,13 +56,13 @@
         </div>
     </main>
 
-    <div class="modal-overlay" id="postModal" onclick="checkCloseModal(event)">
+    <div class="modal-overlay" id="postModal">
         <div class="glass-panel post-modal">
             <h2 style="color: var(--soft-pink); margin-bottom: 20px;">Tạo bài viết mới</h2>
             <input type="text" id="postAuthor" class="glass-input" placeholder="Tên của bạn (VD: Senpai)" value="Ethan">
             
             <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
-                <button id="enhanceBtn" class="liquid-btn" style="padding: 8px 15px; font-size: 0.85rem; background: rgba(147, 51, 234, 0.4);" onclick="enhancePost()">✨ Hóa phép Anime (AI)</button>
+                <button id="enhanceBtn" class="liquid-btn" style="padding: 8px 15px; font-size: 0.85rem; background: rgba(147, 51, 234, 0.4);" onclick="enhancePost()">✨ Hóa phép Anime (Bảo trì)</button>
             </div>
 
             <textarea id="postText" class="glass-textarea" placeholder="Bạn đang nghĩ gì thế? (Hỗ trợ HTML cơ bản)"></textarea>
@@ -79,7 +79,7 @@
                 <img id="imagePreview" src="" alt="Preview">
             </div>
             <div class="flex-between">
-                <button class="liquid-btn" style="background: rgba(255,255,255,0.1); border-color: transparent;" onclick="toggleModal(false)">Hủy</button>
+                <button class="liquid-btn" style="background: rgba(255,255,255,0.1); border-color: transparent;" id="cancelBtn">Hủy</button>
                 <button class="liquid-btn" onclick="window.submitPost()" id="submitBtn">🚀 Đăng bài</button>
             </div>
         </div>
@@ -167,7 +167,7 @@
             </details>
 
             <details class="chill-dropdown">
-                <summary>🌌 Backgrounds</summary>
+                <summary>🌌 Backgrounds(Coming Soon)</summary>
                 <ul class="chill-list">
                     <li onclick="selectChillBackground('./imgs/sky.jpg')">🌠 Starry Anime Sky</li>
                     <li onclick="selectChillBackground('./imgs/sakura.gif')">🌸 Falling Sakura</li>
@@ -203,6 +203,7 @@
             </div>
         </div>
     </div>
+    <button id="testtogglebtn">Toggle Button</button>
      <script type="module" src="app.js"></script>
 </body>
 </html>
