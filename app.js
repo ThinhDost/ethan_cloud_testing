@@ -1,17 +1,25 @@
- // --- LOGIC GIAO DIỆN & ANIMATION CŨ ---
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const popupTexts = ["Kya! (≧◡≦)", "UwU", "Baka~ (＃￣ω￣)", "💕", "Nyaha!", "Stop it! ✨"];
+//-----STATE-----
 
+const state = {
+    popupTexts: ["Kya! (≧◡≦)", "UwU", "Baka~ (＃￣ω￣)", "💕", "Nyaha!", "Stop it! ✨"],
+    audioCtx: new (window.AudioContext || window.webkitAudioContext)()
+};
+//-----------------
+
+//-----DOM-----
+
+ // --- LOGIC GIAO DIỆN & ANIMATION CŨ ---
+        
         function playPopSound() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            osc.type = 'sine'; osc.frequency.setValueAtTime(800, audioCtx.currentTime); 
-            osc.frequency.exponentialRampToValueAtTime(1500, audioCtx.currentTime + 0.1);
-            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-            osc.connect(gainNode); gainNode.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+            if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
+            const osc = state.audioCtx.createOscillator();
+            const gainNode = state.audioCtx.createGain();
+            osc.type = 'sine'; osc.frequency.setValueAtTime(800, state.audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(1500, state.audioCtx.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0.3, state.audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, state.audioCtx.currentTime + 0.1);
+            osc.connect(gainNode); gainNode.connect(state.audioCtx.destination);
+            osc.start(); osc.stop(state.audioCtx.currentTime + 0.1);
         }
 
         const Hiura_cow = document.getElementById('Hiura_interact');
@@ -21,7 +29,7 @@
             playPopSound();
             const wrapper = document.getElementById('shelfWrapper');
             const newBubble = document.createElement('div');
-            newBubble.innerText = popupTexts[Math.floor(Math.random() * popupTexts.length)]; 
+            newBubble.innerText = state.popupTexts[Math.floor(Math.random() * state.popupTexts.length)]; 
             newBubble.className = 'falling-bubble';
             newBubble.style.setProperty('--dir', (Math.random() - 0.5) * 2); 
             newBubble.style.setProperty('--spread', (Math.random() * 70 + 80) + 'px');
@@ -459,11 +467,12 @@ import { createClient } from "https://esm.sh/@libsql/client/web";
 
         // --- ĐĂNG BÀI ---
         window.submitPost = async function() {
+            //hàm document.getElementById('postAuthor').value || 'Anonymous' có nghĩa là nếu người dùng không nhập tên tác giả thì sẽ tự động gán là "Anonymous" để tránh lỗi null hoặc undefined khi lưu vào database. Còn document.getElementById('postText').value sẽ lấy nội dung bài viết mà người dùng đã nhập vào ô textarea.
             const author = document.getElementById('postAuthor').value || 'Anonymous';
             const text = document.getElementById('postText').value;
-
+            //hàm !text.trim() sẽ loại bỏ khoảng trắng ở đầu và cuối chuỗi text. Nếu sau khi loại bỏ khoảng trắng mà chuỗi vẫn rỗng (tức là người dùng không nhập gì hoặc chỉ nhập toàn khoảng trắng), thì điều kiện sẽ trả về true. Còn !currentBase64Image sẽ kiểm tra xem có ảnh nào đã được chọn và xử lý hay chưa. Nếu cả hai điều kiện đều đúng, tức là người dùng không nhập nội dung và cũng không chọn ảnh nào, thì hàm sẽ trả về và không thực hiện việc đăng bài.
             if(!text.trim() && !currentBase64Image) return;
-
+            
             const btn = document.getElementById('submitBtn');
             btn.innerText = "⏳ Đang phóng lên đám mây...";
             btn.disabled = true;
@@ -568,3 +577,63 @@ import { createClient } from "https://esm.sh/@libsql/client/web";
                 await window.magicPopup("Lỗi không thể xóa: " + error.message, "alert");
             }
         }
+        // ==========================================
+// PHẦN THÊM MỚI: LOGIC UI AUTHENTICATION
+// ==========================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    const loginBtn = document.getElementById('auth-login-btn');
+    const modal = document.getElementById('auth-modal');
+    const closeBtn = document.getElementById('auth-close-btn');
+    const loginForm = document.getElementById('auth-login-form');
+
+    // Mở popup
+    loginBtn.addEventListener('click', () => {
+        modal.classList.remove('hidden');
+    });
+
+    // Đóng popup khi bấm nút ✖
+    closeBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+
+    // Đóng popup khi bấm ra ngoài vùng kính
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
+    });
+
+    // Nơi dọn đường cho bạn học Cloud Security (Auth)
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault(); // Ngăn trình duyệt tự động load lại trang khi bấm submit
+
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        console.log("=== BẮT ĐẦU LUỒNG AUTH ===");
+        console.log("Username nhập vào:", username);
+        console.log("Password nhập vào: [Đã ẩn để bảo mật]");
+        
+        // TODO: DÀNH CHO BẠN
+        // Tại đây, bạn sẽ học cách:
+        // 1. Mã hóa password (hash) hoặc gửi dữ liệu qua HTTPS an toàn.
+        // 2. Sử dụng fetch() để gọi API tới Server Cloud của bạn.
+        // 3. Nhận và lưu trữ Token (JWT) vào localStorage, sessionStorage hoặc HttpOnly Cookies.
+        
+        // Ví dụ ảo (để bạn test UI):
+        /*
+        try {
+            const response = await fetch('YOUR_CLOUD_API_ENDPOINT', {
+                method: 'POST',
+                body: JSON.stringify({ username, password })
+            });
+            // Xử lý response...
+        } catch (error) {
+            console.error("Lỗi xác thực:", error);
+        }
+        */
+
+        alert(`Giao diện đã sẵn sàng! Bây giờ bạn có thể code phần Auth để xử lý tài khoản: ${username}`);
+    });
+});

@@ -206,3 +206,29 @@
      <script type="module" src="app.js"></script>
 </body>
 </html>
+<button id="auth-login-btn" class="glass-btn">Đăng nhập (≧◡≦)</button>
+
+    <div id="auth-modal" class="auth-modal-overlay hidden">
+        <div class="auth-glass-box">
+            <button id="auth-close-btn" class="auth-close-btn">✖</button>
+            <h2 class="auth-title">おかえり! <br> (Mừng bạn trở về) ✨</h2>
+            
+            <form id="auth-login-form">
+                <div class="auth-input-group">
+                    <label for="username">Tên người dùng (ID)</label>
+                    <input type="text" id="username" placeholder="Nhập ID của bạn..." required>
+                </div>
+                
+                <div class="auth-input-group">
+                    <label for="password">Mật khẩu</label>
+                    <input type="password" id="password" placeholder="Nhập mật khẩu bí mật..." required>
+                </div>
+                
+                <button type="submit" class="auth-submit-btn">Đăng nhập ngay (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧</button>
+            </form>
+            
+            <div class="auth-footer">
+                <p>Chưa có tài khoản? <a href="#" id="auth-register-link">Đăng ký nè~</a></p>
+            </div>
+        </div>
+    </div>

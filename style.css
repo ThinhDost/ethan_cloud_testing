@@ -544,3 +544,149 @@
             transition: opacity 0.8s ease-in-out; /* Thời gian fade là 0.8 giây */
             pointer-events: none;
         }
+        /* ========================================== */
+        /* PHẦN THÊM MỚI: CSS AUTHENTICATION          */
+        /* ========================================== */
+
+        /* Nút Đăng nhập nổi ở góc trên phải (Tránh thanh sidebar bên trái) */
+        #auth-login-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 998; /* Dưới z-index của sidebar (999) */
+            padding: 10px 20px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            color: var(--text-light);
+            font-weight: bold;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        #auth-login-btn:hover {
+            background: var(--primary-pink);
+            box-shadow: var(--glass-shadow);
+        }
+
+        /* Lớp phủ Modal Đăng nhập */
+        .auth-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6); /* Làm tối nền để nổi bật form */
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000; /* Nằm trên cùng mọi thứ */
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .auth-modal-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Hộp Form kính mờ */
+        .auth-glass-box {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: 15px;
+            padding: 40px;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+            backdrop-filter: blur(15px);
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .auth-modal-overlay.hidden .auth-glass-box {
+            transform: translateY(-50px);
+        }
+
+        /* Nút Đóng */
+        .auth-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: transparent;
+            border: none;
+            color: var(--text-light);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .auth-close-btn:hover {
+            color: var(--primary-pink);
+        }
+
+        /* Chữ trong Form */
+        .auth-title {
+            text-align: center;
+            color: var(--primary-pink);
+            margin-bottom: 20px;
+            font-family: 'Comfortaa', sans-serif;
+        }
+
+        .auth-input-group {
+            margin-bottom: 20px;
+        }
+
+        .auth-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .auth-input-group input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            color: var(--text-light);
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .auth-input-group input:focus {
+            border-color: var(--primary-pink);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .auth-submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-pink);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .auth-submit-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px var(--primary-pink);
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.85rem;
+        }
+
+        .auth-footer a {
+            color: var(--primary-pink);
+            text-decoration: none;
+            font-weight: bold;
+        }
