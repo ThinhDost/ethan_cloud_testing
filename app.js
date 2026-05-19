@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-        //------------STATE-------------
-=======
 //-----STATE-----
 
 const state = {
@@ -13,24 +10,19 @@ let API_URL = "";
 const currentHost = window.location.hostname;
 
 if (currentHost === "localhost" || currentHost === "127.0.0.1") {
-    // 1. Bạn đang mở web dưới máy tính để lập trình
-    API_URL = "http://localhost:8787";
+    API_URL = "http://localhost:8787"; // Dưới máy local
     
 } else if (currentHost === "ethan-cloud-testing.pages.dev") {
-    // 2. Đây ĐÚNG CHÍNH XÁC là trang web thật (Production)
-    // Bạn điền URL của con Worker Production (bản thật) vào đây:
-    API_URL = "https://db-info.giathinh260307.workers.dev/";
+    // Trang FE thật chọc vào Worker Production thật:
+    API_URL = "https://db-info.giathinh260307.workers.dev"; 
     
 } else {
-    // 3. Tất cả các trường hợp còn lại (như efa1f4f0.ethan-cloud-testing.pages.dev)
-    // Trình duyệt sẽ tự hiểu đây là trang chạy thử nghiệm (Preview / Dev)
-    // Bạn điền URL của con Worker Dev (bản -dev) vào đây:
-    API_URL = "https://backend-dev.<tên-subdomain-của-bạn>.workers.dev";
+    // Trang FE chạy thử chọc vào Worker Dev phụ:
+    API_URL = "https://backend-dev.giathinh260307.workers.dev"; 
 }
 //-----DOM-----
 
  // --- LOGIC GIAO DIỆN & ANIMATION CŨ ---
->>>>>>> b953c23e29835fa4a3bbb7d4cbcfb40a892ead7a
         
         // --- LOGIC GIAO DIỆN & ANIMATION CŨ ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -510,13 +502,6 @@ import { createClient } from "https://esm.sh/@libsql/client/web";
         // --- ĐĂNG BÀI (BẢN MỚI QUA BACKEND WORKER) ---
 
         window.submitPost = async function() {
-<<<<<<< HEAD
-            const author = document.getElementById('postAuthor').value || 'Anonymous';
-            const text = document.getElementById('postText').value;
-
-            if(!text.trim() && !currentBase64Image) return;
-
-=======
             // 1. LẤY VÉ THÔNG HÀNH JWT: Vào ngăn kéo trình duyệt bốc token ra
             const token = localStorage.getItem('user_token');
             
@@ -532,7 +517,6 @@ import { createClient } from "https://esm.sh/@libsql/client/web";
             // Kiểm tra nếu không nhập chữ và cũng không chọn ảnh thì dừng lại
             if (!text.trim() && !currentBase64Image) return;
             
->>>>>>> b953c23e29835fa4a3bbb7d4cbcfb40a892ead7a
             const btn = document.getElementById('submitBtn');
             btn.innerText = "⏳ Đang phóng lên đám mây...";
             btn.disabled = true;
@@ -540,7 +524,7 @@ import { createClient } from "https://esm.sh/@libsql/client/web";
             try {
                 // 2. GỌI API BACKEND: Thay vì tương tác DB tại FE, ta dùng fetch gọi sang Worker
                 // (Thay đổi URL 'http://localhost:8787' thành link thật của bạn nếu deploy lên mây)
-                const response = await fetch('https://db-info.giathinh260307.workers.dev/api/posts/create', {
+                const response = await fetch(`${API_URL}/api/posts/create`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -595,7 +579,7 @@ import { createClient } from "https://esm.sh/@libsql/client/web";
                     await window.magicPopup("Bạn chưa đăng nhập! (＃￣ω￣)", "alert");
                     return;
                 }
-                const ketQua = await fetch("https://db-info.giathinh260307.workers.dev", {
+                const ketQua = await fetch(`${API_URL}/api/posts/delete`, {
                     method: "DELETE", 
                     headers: {
                         "Content-Type": "application/json",
@@ -683,11 +667,7 @@ import { createClient } from "https://esm.sh/@libsql/client/web";
                 modal.classList.add('hidden');
             });
 
-<<<<<<< HEAD
-            // Đóng popup khi bấm ra ngoài vùng kính
-=======
             // Đóng popup khi bấm ra ngoài vùng kính    
->>>>>>> b953c23e29835fa4a3bbb7d4cbcfb40a892ead7a
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     modal.classList.add('hidden');
@@ -713,10 +693,6 @@ import { createClient } from "https://esm.sh/@libsql/client/web";
                 
                 // Ví dụ ảo (để bạn test UI):
                 /*
-<<<<<<< HEAD
-                
-=======
->>>>>>> b953c23e29835fa4a3bbb7d4cbcfb40a892ead7a
                 try {
                     const response = await fetch('YOUR_CLOUD_API_ENDPOINT', {
                         method: 'POST',
@@ -727,26 +703,8 @@ import { createClient } from "https://esm.sh/@libsql/client/web";
                     console.error("Lỗi xác thực:", error);
                 }
                 */
-<<<<<<< HEAD
-
-                try{
-                    const response = await fetch('https://db-info.giathinh260307.workers.dev/api/auth/login', {
-                        method: 'POST',
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({username, password})
-                    });
-                    const data = await response.json();
-                    if(data.success)
-
-
-
-                }catch
-                alert(`Giao diện đã sẵn sàng! Bây giờ bạn có thể code phần Auth để xử lý tài khoản: ${username}`);
-            });
-        });
-=======
                try {
-                    const response = await fetch('https://db-info.giathinh260307.workers.dev/api/auth/login', {
+                    const response = await fetch(`${API_URL}/api/auth/login`, {
                         method: 'POST',
                         headers: { 
                             'Content-Type': 'application/json',
@@ -769,4 +727,3 @@ import { createClient } from "https://esm.sh/@libsql/client/web";
                 console.log(`Giao diện đã sẵn sàng! Bây giờ bạn có thể code phần Auth để xử lý tài khoản: ${username}`);
             });
         });
->>>>>>> b953c23e29835fa4a3bbb7d4cbcfb40a892ead7a

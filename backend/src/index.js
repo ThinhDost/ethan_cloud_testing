@@ -11,7 +11,7 @@
 import { createClient } from '@libsql/client/web';
 import bcrypt from 'bcryptjs';
 import {SignJWT} from 'jose';
-const secretKey = new TextEncoder().encode(env.JWT_SECRET);
+
 
 export default {
   async fetch(request, env) {
@@ -22,6 +22,7 @@ export default {
       "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Password",
     };
 	const url = new URL(request.url)
+  const secretKey = new TextEncoder().encode(env.JWT_SECRET);
     // XỬ LÍ THÔNG TIN AUTH CỦA USER
       //LUỒNG ĐĂNG NHẬP
     if(url.pathname === '/api/auth/login' && request.method === 'POST')

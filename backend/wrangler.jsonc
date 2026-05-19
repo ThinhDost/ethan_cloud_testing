@@ -7,12 +7,16 @@
 	"name": "backend",
 	"main": "src/index.js",
 	"compatibility_date": "2026-05-19",
+	
 	"observability": {
 		"enabled": true
 	},
 	"env": {
     	"dev": {
       		// Bạn có thể để trống, Cloudflare sẽ tự hiểu tạo ra bản sao tên là "backend-dev"
+			"compatibility_flags": [
+				"nodejs_compat"
+			]
     	}
   	},
 	"upload_source_maps": true,
