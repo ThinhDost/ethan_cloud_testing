@@ -14,7 +14,11 @@ export default {
     if(request.pathname === '/api/auth/login' && request.method === 'POST')
     {
       try{
+<<<<<<< HEAD
         data = await request.json();
+=======
+        const data = await request.json();
+>>>>>>> b953c23e29835fa4a3bbb7d4cbcfb40a892ead7a
         const username = data.username;
         const password = data.password;
 
@@ -22,7 +26,11 @@ export default {
           url: env.DB_URL,
           authToken: env.DB_TOKEN
         })
+<<<<<<< HEAD
         const queryResult = client.execute({
+=======
+        const queryResult = await client.execute({
+>>>>>>> b953c23e29835fa4a3bbb7d4cbcfb40a892ead7a
           sql: "SELECT * FROM users WHERE username = ?",
           args: [username]
         })
@@ -32,7 +40,11 @@ export default {
           return new Response(JSON.stringify({
             success: false,
             message: "Tài khoản không tồn tại ┐(￣～￣)┌",
+<<<<<<< HEAD
           }) {status: 401, headers: {"Content-Type": "application/json"}})
+=======
+          }), {status: 401, headers: {"Content-Type": "application/json"}})
+>>>>>>> b953c23e29835fa4a3bbb7d4cbcfb40a892ead7a
         }
 
         const existUser = queryResult.rows[0];
@@ -44,20 +56,33 @@ export default {
           return new Response(JSON.stringify({
             success: true,
             message: "Đăng nhập thành công",
+<<<<<<< HEAD
           }) {headers: {"Content-Type": "application/json"}})
+=======
+            token: JWT_TOKEN,
+          }), {headers: {"Content-Type": "application/json"}})
+>>>>>>> b953c23e29835fa4a3bbb7d4cbcfb40a892ead7a
         }
         
         return new Response(JSON.stringify({
             success: false,
             message: "Mật khẩu sai rồi",
+<<<<<<< HEAD
           }) {status: 401, headers: {"Content-Type": "application/json"}})
+=======
+          }), {status: 401, headers: {"Content-Type": "application/json"}})
+>>>>>>> b953c23e29835fa4a3bbb7d4cbcfb40a892ead7a
 
         }catch(error)
         {
           return new Response(JSON.stringify({
             success: true,
             message: error.message,
+<<<<<<< HEAD
           }) {status: 500, headers: {"Content-Type": "application/json"}})
+=======
+          }), {status: 500, headers: {"Content-Type": "application/json"}})
+>>>>>>> b953c23e29835fa4a3bbb7d4cbcfb40a892ead7a
         }
     }
 

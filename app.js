@@ -1,4 +1,36 @@
+<<<<<<< HEAD
         //------------STATE-------------
+=======
+//-----STATE-----
+
+const state = {
+    popupTexts: ["Kya! (≧◡≦)", "UwU", "Baka~ (＃￣ω￣)", "💕", "Nyaha!", "Stop it! ✨"],
+    audioCtx: new (window.AudioContext || window.webkitAudioContext)()
+};
+//-----------------
+const token = localStorage.getItem('authToken');
+let API_URL = "";
+const currentHost = window.location.hostname;
+
+if (currentHost === "localhost" || currentHost === "127.0.0.1") {
+    // 1. Bạn đang mở web dưới máy tính để lập trình
+    API_URL = "http://localhost:8787";
+    
+} else if (currentHost === "ethan-cloud-testing.pages.dev") {
+    // 2. Đây ĐÚNG CHÍNH XÁC là trang web thật (Production)
+    // Bạn điền URL của con Worker Production (bản thật) vào đây:
+    API_URL = "https://db-info.giathinh260307.workers.dev/";
+    
+} else {
+    // 3. Tất cả các trường hợp còn lại (như efa1f4f0.ethan-cloud-testing.pages.dev)
+    // Trình duyệt sẽ tự hiểu đây là trang chạy thử nghiệm (Preview / Dev)
+    // Bạn điền URL của con Worker Dev (bản -dev) vào đây:
+    API_URL = "https://backend-dev.<tên-subdomain-của-bạn>.workers.dev";
+}
+//-----DOM-----
+
+ // --- LOGIC GIAO DIỆN & ANIMATION CŨ ---
+>>>>>>> b953c23e29835fa4a3bbb7d4cbcfb40a892ead7a
         
         // --- LOGIC GIAO DIỆN & ANIMATION CŨ ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -34,7 +66,14 @@
 
         
         const createPostBtn = document.getElementById('createPostBtn');
-        createPostBtn.addEventListener('click', () => toggleModal(true));
+        createPostBtn.addEventListener('click', checkAuthBeforeSubmit);
+        async function checkAuthBeforeSubmit() {
+            if (!token) {
+                await window.magicPopup("Bạn chưa đăng nhập! (＃￣ω￣)", "alert");
+                return;
+            }
+            toggleModal(true);
+        }
 
         const cancelBtn = document.getElementById('cancelBtn');
         cancelBtn.addEventListener('click', () => toggleModal(false));
@@ -468,36 +507,76 @@ import { createClient } from "https://esm.sh/@libsql/client/web";
             }
         }
 
-        // --- ĐĂNG BÀI ---
+        // --- ĐĂNG BÀI (BẢN MỚI QUA BACKEND WORKER) ---
+
         window.submitPost = async function() {
+<<<<<<< HEAD
             const author = document.getElementById('postAuthor').value || 'Anonymous';
             const text = document.getElementById('postText').value;
 
             if(!text.trim() && !currentBase64Image) return;
 
+=======
+            // 1. LẤY VÉ THÔNG HÀNH JWT: Vào ngăn kéo trình duyệt bốc token ra
+            const token = localStorage.getItem('user_token');
+            
+            // Nếu chưa đăng nhập (không có token), chặn lại ngay từ vòng gửi xe trên FE
+            if (!token) {
+                await window.magicPopup("Vui lòng đăng nhập để có quyền đăng bài viết! ⚠️", "alert");
+                return;
+            }
+
+            const author = document.getElementById('postAuthor').value || 'Anonymous';
+            const text = document.getElementById('postText').value;
+
+            // Kiểm tra nếu không nhập chữ và cũng không chọn ảnh thì dừng lại
+            if (!text.trim() && !currentBase64Image) return;
+            
+>>>>>>> b953c23e29835fa4a3bbb7d4cbcfb40a892ead7a
             const btn = document.getElementById('submitBtn');
             btn.innerText = "⏳ Đang phóng lên đám mây...";
             btn.disabled = true;
 
             try {
-                let finalContent = text;
-                if (currentBase64Image) {
-                    finalContent += `<br><img src="${currentBase64Image}" class="post-uploaded-image">`;
-                }
-
-                await db.execute({
-                    sql: "INSERT INTO posts (author, content) VALUES (?, ?)",
-                    args: [author, finalContent]
+                // 2. GỌI API BACKEND: Thay vì tương tác DB tại FE, ta dùng fetch gọi sang Worker
+                // (Thay đổi URL 'http://localhost:8787' thành link thật của bạn nếu deploy lên mây)
+                const response = await fetch('https://db-info.giathinh260307.workers.dev/api/posts/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        
+                        // Đính kèm tấm vé JWT vào Header Authorization theo chuẩn quốc tế
+                        'Authorization': `Bearer ${token}`
+                    },
+                    // Đóng gói nguyên liệu thô dạng JSON để gửi đi
+                    body: JSON.stringify({
+                        author: author, 
+                        text: text,
+                        image: currentBase64Image // Chuỗi Base64 của ảnh (nếu có)
+                    })
                 });
+
+                // 3. ĐỌC PHẢN HỒI TỪ BACKEND
+                const result = await response.json();
+
+                // Nếu HTTP Status Code không phải 200/201 hoặc backend báo success: false
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || "Đăng bài thất bại từ phía máy chủ");
+                }
                 
+                // 4. XỬ LÝ KHI THÀNH CÔNG CỦA FE (Giữ nguyên logic cũ của bạn)
                 document.getElementById('postText').value = '';
                 window.removeImage(); 
                 toggleModal(false); 
+                
+                // Tải lại danh sách bài viết (Hàm fetchPosts này sau này cũng gọi qua API GET /api/posts nhé)
                 await window.fetchPosts(); 
                 
             } catch (error) {
+                // Nếu token hết hạn, bị sai, hoặc lỗi mạng, hệ thống sẽ nhảy vào đây
                 await window.magicPopup("Lỗi khi đăng: " + error.message, "alert");
             } finally {
+                // Trả lại trạng thái nút bấm như cũ
                 btn.innerText = "🚀 Đăng bài";
                 btn.disabled = false;
             }
@@ -512,11 +591,16 @@ import { createClient } from "https://esm.sh/@libsql/client/web";
             if (!passcode) return;
 
             try {
+                if(!token) {
+                    await window.magicPopup("Bạn chưa đăng nhập! (＃￣ω￣)", "alert");
+                    return;
+                }
                 const ketQua = await fetch("https://db-info.giathinh260307.workers.dev", {
                     method: "DELETE", 
                     headers: {
                         "Content-Type": "application/json",
-                        "X-Admin-Password": passcode 
+                        "X-Admin-Password": passcode,
+                        'Authorization': 'Bearer ' + token,
                     },
                     body: JSON.stringify({ postId: postId })
                 });
@@ -599,7 +683,11 @@ import { createClient } from "https://esm.sh/@libsql/client/web";
                 modal.classList.add('hidden');
             });
 
+<<<<<<< HEAD
             // Đóng popup khi bấm ra ngoài vùng kính
+=======
+            // Đóng popup khi bấm ra ngoài vùng kính    
+>>>>>>> b953c23e29835fa4a3bbb7d4cbcfb40a892ead7a
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     modal.classList.add('hidden');
@@ -625,7 +713,10 @@ import { createClient } from "https://esm.sh/@libsql/client/web";
                 
                 // Ví dụ ảo (để bạn test UI):
                 /*
+<<<<<<< HEAD
                 
+=======
+>>>>>>> b953c23e29835fa4a3bbb7d4cbcfb40a892ead7a
                 try {
                     const response = await fetch('YOUR_CLOUD_API_ENDPOINT', {
                         method: 'POST',
@@ -636,6 +727,7 @@ import { createClient } from "https://esm.sh/@libsql/client/web";
                     console.error("Lỗi xác thực:", error);
                 }
                 */
+<<<<<<< HEAD
 
                 try{
                     const response = await fetch('https://db-info.giathinh260307.workers.dev/api/auth/login', {
@@ -652,3 +744,29 @@ import { createClient } from "https://esm.sh/@libsql/client/web";
                 alert(`Giao diện đã sẵn sàng! Bây giờ bạn có thể code phần Auth để xử lý tài khoản: ${username}`);
             });
         });
+=======
+               try {
+                    const response = await fetch('https://db-info.giathinh260307.workers.dev/api/auth/login', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + localStorage.getItem('user_token') // Gửi token cũ nếu có để kiểm tra phiên làm việc
+                        },
+                        body: JSON.stringify({ username, password })
+                    });
+                    const data = await response.json();
+                    if(data.success) {
+                        localStorage.setItem('authToken', data.token); // Lưu token vào localStorage
+                        modal.classList.add('hidden'); // Đóng popup sau khi đăng nhập thành công
+                    }
+                    else {
+                        await window.magicPopup("Đăng nhập thất bại: " + (data.message || "Thông tin không chính xác"), "alert");
+                    }
+                    }catch (error) {
+                    console.error("Lỗi khi gọi API xác thực:", error);
+                    }
+
+                console.log(`Giao diện đã sẵn sàng! Bây giờ bạn có thể code phần Auth để xử lý tài khoản: ${username}`);
+            });
+        });
+>>>>>>> b953c23e29835fa4a3bbb7d4cbcfb40a892ead7a
