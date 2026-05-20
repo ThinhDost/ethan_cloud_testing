@@ -27,7 +27,8 @@ export default {
       //LUỒNG ĐĂNG NHẬP
     if(url.pathname === '/api/auth/login' && request.method === 'POST')
     {
-      try{
+      try
+      {
         const data = await request.json();
         const username = data.username;
         const password = data.password;
@@ -51,39 +52,48 @@ export default {
 
         const existUser = queryResult.rows[0];
         const hashedPassword = existUser.password_hash;
+
+        if(!hashedPassword)
+        {
+          return new Response(JSON.stringify({
+            success: false,
+            message: "Tài khoản không tồn tại ┐(￣～￣)┌",
+          }), {status: 500, headers: {...corsHeaders,"Content-Type": "application/json"}})
+        }
+
         const isMatch = await bcrypt.compare(password, hashedPassword);
 
         if(isMatch)
         {
-			const userPayload = {
-				userId: existUser.id,
-				username: existUser.username,
-				role: existUser.role || "user"
-			};
-			const JWT_TOKEN = await new SignJWT(userPayload)
-				.setProtectedHeader({ alg: 'HS256' })
-				.setExpirationTime('2h')
-				.sign(secretKey);
-          	return new Response(JSON.stringify({
-            	success: true,
-            	message: "Đăng nhập thành công",
-            	token: JWT_TOKEN,
-          	}), {headers: {...corsHeaders, "Content-Type": "application/json"}})
+          const userPayload = {
+            userId: existUser.id,
+            username: existUser.username,
+            role: existUser.role || "user"
+          };
+          const JWT_TOKEN = await new SignJWT(userPayload)
+            .setProtectedHeader({ alg: 'HS256' })
+            .setExpirationTime('2h')
+            .sign(secretKey);
+                return new Response(JSON.stringify({
+                  success: true,
+                  message: "Đăng nhập thành công",
+                  token: JWT_TOKEN,
+                }), {headers: {...corsHeaders, "Content-Type": "application/json"}})
         }
         
-        return new Response(JSON.stringify({
-            success: false,
-            message: "Mật khẩu sai rồi",
-          }), {status: 401, headers: {...corsHeaders, "Content-Type": "application/json"}})
+        else return new Response(JSON.stringify({
+              success: false,
+              message: "Mật khẩu sai rồi",
+            }), {status: 401, headers: {...corsHeaders, "Content-Type": "application/json"}})
 
-        }catch(error)
-        {
-          return new Response(JSON.stringify({
-            success: false,
-            message: error.message,
-          }), {status: 500, headers: {...corsHeaders, "Content-Type": "application/json"}})
+      }catch(error)
+          {
+            return new Response(JSON.stringify({
+              success: false,
+              message: error.message,
+            }), {status: 500, headers: {...corsHeaders, "Content-Type": "application/json"}})
+          }
         }
-    }
 	// Xử lí đăng bài - chỉ cho phép user đã auth mới được đăng
 	if(url.pathname === '/api/posts/create' && request.method === 'POST')
     {
