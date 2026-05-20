@@ -690,3 +690,20 @@
             text-decoration: none;
             font-weight: bold;
         }
+        /* =========================================
+        THÊM MỚI CHO FORM ĐĂNG KÝ
+        ========================================= */
+        /* Dùng display: none để ẩn form đi ngay lập tức không ảnh hưởng animation */
+        .form-hidden {
+            display: none !important;
+        }
+
+        /* Format cho dòng chữ báo lỗi gõ sai mật khẩu xác nhận */
+        .auth-error-text {
+            color: #ff4d4d;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255, 77, 77, 0.4);
+        }

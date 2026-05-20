@@ -674,45 +674,25 @@ import { createClient } from "https://esm.sh/@libsql/client/web";
                 }
             });
 
-            // Nơi dọn đường cho bạn học Cloud Security (Auth)
+            // ==========================================
+            // 1. LUỒNG ĐĂNG NHẬP
+            // ==========================================
             loginForm.addEventListener('submit', async (e) => {
                 e.preventDefault(); // Ngăn trình duyệt tự động load lại trang khi bấm submit
 
                 const username = document.getElementById('username').value;
                 const password = document.getElementById('password').value;
 
-                console.log("=== BẮT ĐẦU LUỒNG AUTH ===");
-                console.log("Username nhập vào:", username);
-                console.log("Password nhập vào: [Đã ẩn để bảo mật]");
-                
-                // TODO: DÀNH CHO BẠN
-                // Tại đây, bạn sẽ học cách:
-                // 1. Mã hóa password (hash) hoặc gửi dữ liệu qua HTTPS an toàn.
-                // 2. Sử dụng fetch() để gọi API tới Server Cloud của bạn.
-                // 3. Nhận và lưu trữ Token (JWT) vào localStorage, sessionStorage hoặc HttpOnly Cookies.
-                
-                // Ví dụ ảo (để bạn test UI):
-                /*
                 try {
-                    const response = await fetch('YOUR_CLOUD_API_ENDPOINT', {
-                        method: 'POST',
-                        body: JSON.stringify({ username, password })
-                    });
-                    // Xử lý response...
-                } catch (error) {
-                    console.error("Lỗi xác thực:", error);
-                }
-                */
-               try {
-                    const response = await fetch(`${API_URL}/api/auth/login`, {
+                    const log_response = await fetch(`${API_URL}/api/auth/login`, {
                         method: 'POST',
                         headers: { 
                             'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + localStorage.getItem('user_token') // Gửi token cũ nếu có để kiểm tra phiên làm việc
+                            'Authorization': 'Bearer ' + localStorage.getItem('user_token') 
                         },
                         body: JSON.stringify({ username, password })
                     });
-                    const data = await response.json();
+                    const data = await log_response.json();
                     if(data.success) {
                         localStorage.setItem('authToken', data.token); // Lưu token vào localStorage
                         modal.classList.add('hidden'); // Đóng popup sau khi đăng nhập thành công
@@ -720,10 +700,81 @@ import { createClient } from "https://esm.sh/@libsql/client/web";
                     else {
                         await window.magicPopup("Đăng nhập thất bại: " + (data.message || "Thông tin không chính xác"), "alert");
                     }
-                    }catch (error) {
+                } catch (error) {
                     console.error("Lỗi khi gọi API xác thực:", error);
-                    }
+                }
+            }); 
 
-                console.log(`Giao diện đã sẵn sàng! Bây giờ bạn có thể code phần Auth để xử lý tài khoản: ${username}`);
+
+            // ==========================================
+            // 2. UI/UX: CHUYỂN ĐỔI FORM ĐĂNG NHẬP / ĐĂNG KÝ
+            // ==========================================
+            const loginSection = document.getElementById('login-section');
+            const registerSection = document.getElementById('register-section');
+            const authRegisterLink = document.getElementById('auth-register-link');
+            const authLoginLink = document.getElementById('auth-login-link');
+            const registerForm = document.getElementById('auth-register-form');
+            const regErrorMsg = document.getElementById('reg-error-msg');
+
+            // Bấm "Đăng ký nè~" -> Ẩn form Login, Hiện form Đăng ký
+            authRegisterLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                loginSection.classList.add('form-hidden');
+                registerSection.classList.remove('form-hidden');
+                regErrorMsg.innerText = ""; // Xóa thông báo lỗi cũ nếu có
             });
+
+            // Bấm "Quay lại đăng nhập~" -> Ẩn form Đăng ký, Hiện form Login
+            authLoginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                registerSection.classList.add('form-hidden');
+                loginSection.classList.remove('form-hidden');
+            });
+
+
+            // ==========================================
+            // 3. LUỒNG ĐĂNG KÝ (Đã thêm chữ async)
+            // ==========================================
+            registerForm.addEventListener('submit', async (e) => { // 🌟 ĐÃ THÊM ASYNC VÀO ĐÂY
+                e.preventDefault(); // Chặn hành động tải lại trang
+                
+                // Lấy dữ liệu người dùng nhập
+                const username = document.getElementById('reg-username').value.trim();
+                const password = document.getElementById('reg-password').value;
+                const confirmPassword = document.getElementById('reg-confirm-password').value;
+                
+                // Reset lỗi
+                regErrorMsg.innerText = "";
+
+                // Bác sĩ UI/UX kiểm tra: Hai mật khẩu không khớp? Chặn ngay tại cửa!
+                if (password !== confirmPassword) {
+                    regErrorMsg.innerText = "❌ Á chà! Mật khẩu xác nhận không khớp rồi, kiểm tra lại nha!";
+                    return; 
+                }
+
+                try {
+                    const reg_response = await fetch(`${API_URL}/api/auth/register`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    const reg_data = await reg_response.json();
+                    
+                    if(reg_data.success) {
+                        await window.magicPopup("Đăng ký thành công! Bây giờ hãy đăng nhập với tài khoản mới tạo nhé! 🎉", "alert");
+                        
+                        // Tùy chọn thêm: Đăng ký thành công thì tự động chuyển về form Đăng nhập
+                        registerSection.classList.add('form-hidden');
+                        loginSection.classList.remove('form-hidden');
+                        document.getElementById('auth-register-form').reset(); // Xóa sạch form đăng ký
+                    }
+                    else {
+                        await window.magicPopup("Đăng ký thất bại: " + (reg_data.message || "Thông tin không chính xác"), "alert");
+                    }
+                } catch (error) {
+                    console.error("Lỗi khi gọi API đăng ký:", error);
+                    await window.magicPopup("Mất kết nối đến server!", "alert");
+                }
+            });
+
         });

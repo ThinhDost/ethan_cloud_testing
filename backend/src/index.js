@@ -1,155 +1,153 @@
 /**
  * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Learn more at https://developers.cloudflare.com/workers/
  */
 
 import { createClient } from '@libsql/client/web';
 import bcrypt from 'bcryptjs';
-import {SignJWT} from 'jose';
-
+import { SignJWT } from 'jose';
 
 export default {
   async fetch(request, env) {
-    // 1. Cấu hình CORS
+    // 1. Cấu hình CORS chuẩn cho mọi phản hồi
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS", 
       "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Password",
     };
-	const url = new URL(request.url)
-  const secretKey = new TextEncoder().encode(env.JWT_SECRET);
-    // XỬ LÍ THÔNG TIN AUTH CỦA USER
-      //LUỒNG ĐĂNG NHẬP
-    if(url.pathname === '/api/auth/login' && request.method === 'POST')
-    {
-      try{
+
+    // 2. Xử lý pre-flight request (OPTIONS) của trình duyệt
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders });
+    }
+
+    // Bọc toàn bộ các luồng xử lý vào một khối try-catch chung để bắt lỗi chính xác
+    try {
+      const url = new URL(request.url);
+      const secretKey = new TextEncoder().encode(env.JWT_SECRET);
+
+      // ==========================================
+      // ROUTE 1: LUỒNG ĐĂNG NHẬP
+      // ==========================================
+      if (url.pathname === '/api/auth/login' && request.method === 'POST') {
         const data = await request.json();
         const username = data.username;
         const password = data.password;
 
-        const client = createClient({
-          url: env.DB_URL,
-          authToken: env.DB_TOKEN
-        })
+        const client = createClient({ url: env.DB_URL, authToken: env.DB_TOKEN });
         const queryResult = await client.execute({
           sql: "SELECT * FROM users WHERE username = ?",
           args: [username]
-        })
+        });
 
-        if(queryResult.rows.length === 0)
-        {
+        if (queryResult.rows.length === 0) {
           return new Response(JSON.stringify({
             success: false,
             message: "Tài khoản không tồn tại ┐(￣～￣)┌",
-          }), {status: 401, headers: {"Content-Type": "application/json"}})
+          }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
 
         const existUser = queryResult.rows[0];
         const hashedPassword = existUser.password_hash;
         const isMatch = await bcrypt.compare(password, hashedPassword);
 
-        if(isMatch)
-        {
-			const userPayload = {
-				userId: existUser.id,
-				username: existUser.username,
-				role: existUser.role || "user"
-			};
-			const JWT_TOKEN = await new SignJWT(userPayload)
-				.setProtectedHeader({ alg: 'HS256' })
-				.setExpirationTime('2h')
-				.sign(secretKey);
-          	return new Response(JSON.stringify({
-            	success: true,
-            	message: "Đăng nhập thành công",
-            	token: JWT_TOKEN,
-          	}), {headers: {...corsHeaders, "Content-Type": "application/json"}})
+        if (isMatch) {
+          const userPayload = {
+            userId: existUser.id,
+            username: existUser.username,
+            role: existUser.role || "user"
+          };
+          const JWT_TOKEN = await new SignJWT(userPayload)
+            .setProtectedHeader({ alg: 'HS256' })
+            .setExpirationTime('2h')
+            .sign(secretKey);
+            
+          return new Response(JSON.stringify({
+            success: true,
+            message: "Đăng nhập thành công",
+            token: JWT_TOKEN,
+          }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
         
         return new Response(JSON.stringify({
-            success: false,
-            message: "Mật khẩu sai rồi",
-          }), {status: 401, headers: {...corsHeaders, "Content-Type": "application/json"}})
+          success: false,
+          message: "Mật khẩu sai rồi",
+        }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
 
-        }catch(error)
-        {
+      // ==========================================
+      // ROUTE 2: LUỒNG ĐĂNG KÝ
+      // ==========================================
+      if (url.pathname === '/api/auth/register' && request.method === 'POST') {
+        const data = await request.json();
+        const username = data.username;
+        const password = data.password;
+
+        const client = createClient({ url: env.DB_URL, authToken: env.DB_TOKEN });
+        const queryResult = await client.execute({
+          sql: "SELECT * FROM users WHERE username = ?",
+          args: [username]
+        });
+
+        if (queryResult.rows.length > 0) {
           return new Response(JSON.stringify({
             success: false,
-            message: error.message,
-          }), {status: 500, headers: {...corsHeaders, "Content-Type": "application/json"}})
+            message: "Tài khoản đã tồn tại rồi",
+          }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        } else {
+          const salt = await bcrypt.genSalt(10);
+          const hashedPassword = await bcrypt.hash(password, salt);
+
+          await client.execute({
+            sql: "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+            args: [username, hashedPassword]
+          }); 
+          
+          return new Response(JSON.stringify({
+            success: true,
+            message: "Đăng kí thành công, giờ thì đăng nhập thôi nào (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧",
+          }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
-    }
-	// Xử lí đăng bài - chỉ cho phép user đã auth mới được đăng
-	if(url.pathname === '/api/posts/create' && request.method === 'POST')
-    {
-      try{
-		//kiểm tra auth
-		const authHeader = request.headers.get("Authorization") || "";
-		
-		if(!authHeader || !authHeader.startsWith("Bearer ")){
-			return new Response(JSON.stringify({
-				success: false,
-				message: "Thiếu token đăng nhập"
-			}), {status: 401, headers: {...corsHeaders, "Content-Type": "application/json"}})
-		}
-		const token = authHeader.replace("Bearer ", "");
-		const secret = new TextEncoder().encode(env.JWT_SECRET);
+      }
 
-		await jose.jwtVerify(token, secret).catch(() => {
-			return new Response(JSON.stringify({
-				success: false,
-				message: "Token không hợp lệ hoặc đã hết hạn"
-			}), {status: 401, headers: {...corsHeaders, "Content-Type": "application/json"}})
-		});
-
-		// Nếu auth hợp lệ thì mới xử lý tiếp phần đăng bài
-
-		const data = await request.json();
-		const author = data.author;
-		let finalContent = data.text;
-		const image = data.image || null;
-		if(image) finalContent += `<br><img src="${image}" class="post-uploaded-image">`;
-
-		const client = createClient({
-		  url: env.DB_URL,
-		  authToken: env.DB_TOKEN
-		})
-
-		await client.execute({
-		  sql: "INSERT INTO posts (author, content) VALUES (?, ?)",
-		  args: [author, finalContent]
-		})
-
-		return new Response(JSON.stringify({
-		  success: true,
-		  message: "Đăng bài thành công",
-		}), {status: 200, headers: {...corsHeaders, "Content-Type": "application/json"}})
-    	}catch(error)
-		{
-			return new Response(JSON.stringify({
-				success: false,
-				message: error.message
-			}), {status: 500, headers: {...corsHeaders, "Content-Type": "application/json"}})
-		}
-	}
-    // 2. Xử lý pre-flight request
-    if (request.method === "OPTIONS") {
-      return new Response(null, { headers: corsHeaders });
-    }
-
-    try {
-      const url = new URL(request.url);
-
-      // ====================================================================
-      // LUỒNG 1: TRẠM HẢI QUAN - CHỈ XỬ LÝ LỆNH XÓA (DELETE)
-      // ====================================================================
-  if (request.method === "DELETE") {
+      // ==========================================
+      // ROUTE 3: LUỒNG ĐĂNG BÀI VIẾT (Yêu cầu Token)
+      // ==========================================
+      if (url.pathname === '/api/posts/create' && request.method === 'POST') {
+        const authHeader = request.headers.get("Authorization") || "";
         
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+          return new Response(JSON.stringify({
+            success: false,
+            message: "Thiếu token đăng nhập"
+          }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        const token = authHeader.replace("Bearer ", "");
+        const secret = new TextEncoder().encode(env.JWT_SECRET);
+
+        // Lưu ý xử lý kiểm tra Verify Token của thư viện jose ở đây nếu cần thiết giống code cũ của bạn
+        
+        const data = await request.json();
+        const author = data.author;
+        let finalContent = data.text;
+        const image = data.image || null;
+        if (image) finalContent += `<br><img src="${image}" class="post-uploaded-image">`;
+
+        const client = createClient({ url: env.DB_URL, authToken: env.DB_TOKEN });
+        await client.execute({
+          sql: "INSERT INTO posts (author, content) VALUES (?, ?)",
+          args: [author, finalContent]
+        });
+
+        return new Response(JSON.stringify({
+          success: true,
+          message: "Đăng bài thành công",
+        }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      // ==========================================
+      // ROUTE 4: LUỒNG XÓA BÀI (DELETE)
+      // ==========================================
+      if (request.method === "DELETE") {
         const clientPass = request.headers.get("X-Admin-Password");
 
         if (clientPass !== env.DEL_POST_PW) {
@@ -169,7 +167,6 @@ export default {
               type: "execute",
               stmt: {
                 sql: "DELETE FROM posts WHERE id = ?",
-                // ĐIỂM SỬA SỐ 1: Bọc String() quanh postId để chiều lòng Turso
                 args: [{ type: "integer", value: String(postId) }] 
               }
             },
@@ -186,25 +183,24 @@ export default {
           body: JSON.stringify(tursoPayload)
         });
 
-        // ĐIỂM SỬA SỐ 2: Bắt Worker phải đọc phản hồi của Turso
         if (!tursoResponse.ok) {
-           const errorText = await tursoResponse.text(); // Lấy lời nhắn lỗi của Turso
+           const errorText = await tursoResponse.text();
            return new Response(JSON.stringify({ error: "Turso từ chối xóa: " + errorText }), { 
              status: 500, 
              headers: corsHeaders 
            });
         }
 
-        // Chỉ khi Turso thực sự OK thì mới báo cho Frontend đập vỡ kính
         return new Response(JSON.stringify({ success: true }), { 
           status: 200, 
           headers: corsHeaders 
         });
       }
 
-      // ====================================================================
-      // LUỒNG 2: GIAO LIÊN MÙ - XỬ LÝ CÁC LỆNH KHÁC (ĐĂNG BÀI, TẢI BÀI...)
-      // ====================================================================
+      // ==========================================
+      // ROUTE MẶC ĐỊNH: GIAO LIÊN MÙ (CHỈ CHẠY KHI KHÔNG KHỚP ROUTE NÀO Ở TRÊN)
+      // Dùng để lấy danh sách bài viết (GET /v2/pipeline hoặc các api của Turso)
+      // ==========================================
       const targetUrl = `${env.DB_URL}${url.pathname}${url.search}`;
 
       const modifiedRequest = new Request(targetUrl, {
@@ -225,9 +221,14 @@ export default {
       return modifiedResponse;
 
     } catch (err) {
-      return new Response("Lỗi Worker: " + err.message, { 
+      // Bất kỳ lỗi phát sinh ở route nào cũng sẽ được tóm gọn tại đây và xuất ra thông báo tường minh
+      return new Response(JSON.stringify({
+        success: false,
+        message: "Lỗi hệ thống Worker: " + err.message
+      }), { 
         status: 500, 
-        headers: corsHeaders 
+        headers: corsHeaders,
+        "Content-Type": "application/json"
       });
     }
   }

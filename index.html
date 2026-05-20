@@ -205,30 +205,62 @@
     </div>
      <script type="module" src="app.js"></script>
 </body>
-</html>
+
 <button id="auth-login-btn" class="glass-btn">Đăng nhập (≧◡≦)</button>
 
     <div id="auth-modal" class="auth-modal-overlay hidden">
         <div class="auth-glass-box">
             <button id="auth-close-btn" class="auth-close-btn">✖</button>
-            <h2 class="auth-title">おかえり! <br> (Mừng bạn trở về) ✨</h2>
             
-            <form id="auth-login-form">
-                <div class="auth-input-group">
-                    <label for="username">Tên người dùng (ID)</label>
-                    <input type="text" id="username" placeholder="Nhập ID của bạn..." required>
-                </div>
+            <div id="login-section">
+                <h2 class="auth-title">おかえり! <br> (Mừng bạn trở về) ✨</h2>
                 
-                <div class="auth-input-group">
-                    <label for="password">Mật khẩu</label>
-                    <input type="password" id="password" placeholder="Nhập mật khẩu bí mật..." required>
-                </div>
+                <form id="auth-login-form">
+                    <div class="auth-input-group">
+                        <label for="username">Tên người dùng (ID)</label>
+                        <input type="text" id="username" placeholder="Nhập ID của bạn..." required>
+                    </div>
+                    <div class="auth-input-group">
+                        <label for="password">Mật khẩu</label>
+                        <input type="password" id="password" placeholder="Nhập mật khẩu bí mật..." required>
+                    </div>
+                    <button type="submit" class="auth-submit-btn">Đăng nhập ngay (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧</button>
+                </form>
                 
-                <button type="submit" class="auth-submit-btn">Đăng nhập ngay (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧</button>
-            </form>
-            
-            <div class="auth-footer">
-                <p>Chưa có tài khoản? <a href="#" id="auth-register-link">Đăng ký nè~</a></p>
+                <div class="auth-footer">
+                    <p>Chưa có tài khoản? <a href="#" id="auth-register-link">Đăng ký nè~</a></p>
+                </div>
             </div>
+
+            <div id="register-section" class="form-hidden">
+                <h2 class="auth-title">はじめまして! <br> (Chào người mới) 🌸</h2>
+                
+                <form id="auth-register-form">
+                    <div class="auth-input-group">
+                        <label for="reg-username">Tên người dùng (ID)</label>
+                        <input type="text" id="reg-username" placeholder="Tên định danh của bạn..." required minlength="3">
+                    </div>
+                    
+                    <div class="auth-input-group">
+                        <label for="reg-password">Mật khẩu</label>
+                        <input type="password" id="reg-password" placeholder="Tạo mật khẩu (ít nhất 6 ký tự)..." required minlength="6">
+                    </div>
+
+                    <div class="auth-input-group">
+                        <label for="reg-confirm-password">Xác nhận mật khẩu</label>
+                        <input type="password" id="reg-confirm-password" placeholder="Nhập lại mật khẩu cho chắc ăn..." required>
+                    </div>
+                    
+                    <div id="reg-error-msg" class="auth-error-text"></div>
+                    
+                    <button type="submit" class="auth-submit-btn">Tạo tài khoản (๑˃ᴗ˂)ﻭ</button>
+                </form>
+                
+                <div class="auth-footer">
+                    <p>Đã có tài khoản rồi? <a href="#" id="auth-login-link">Quay lại đăng nhập~</a></p>
+                </div>
+            </div>
+
         </div>
     </div>
+</html>
