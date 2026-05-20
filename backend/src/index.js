@@ -14,21 +14,15 @@ export default {
       "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS", 
       "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Password",
     };
-
-    // 2. Xử lý pre-flight request (OPTIONS) của trình duyệt
-    if (request.method === "OPTIONS") {
-      return new Response(null, { headers: corsHeaders });
-    }
-
-    // Bọc toàn bộ các luồng xử lý vào một khối try-catch chung để bắt lỗi chính xác
+	const url = new URL(request.url)
+  const secretKey = new TextEncoder().encode(env.JWT_SECRET);
     try {
-      const url = new URL(request.url);
-      const secretKey = new TextEncoder().encode(env.JWT_SECRET);
-
-      // ==========================================
-      // ROUTE 1: LUỒNG ĐĂNG NHẬP
-      // ==========================================
-      if (url.pathname === '/api/auth/login' && request.method === 'POST') {
+    // XỬ LÍ THÔNG TIN AUTH CỦA USER
+      //LUỒNG ĐĂNG NHẬP
+    if(url.pathname === '/api/auth/login' && request.method === 'POST')
+    {
+      try
+      {
         const data = await request.json();
         const username = data.username;
         const password = data.password;
@@ -43,14 +37,24 @@ export default {
           return new Response(JSON.stringify({
             success: false,
             message: "Tài khoản không tồn tại ┐(￣～￣)┌",
-          }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }), {status: 401, headers: {...corsHeaders,"Content-Type": "application/json"}})
         }
 
         const existUser = queryResult.rows[0];
         const hashedPassword = existUser.password_hash;
+
+        if(!hashedPassword)
+        {
+          return new Response(JSON.stringify({
+            success: false,
+            message: "Tài khoản không tồn tại ┐(￣～￣)┌",
+          }), {status: 500, headers: {...corsHeaders,"Content-Type": "application/json"}})
+        }
+
         const isMatch = await bcrypt.compare(password, hashedPassword);
 
-        if (isMatch) {
+        if(isMatch)
+        {
           const userPayload = {
             userId: existUser.id,
             username: existUser.username,
@@ -60,54 +64,28 @@ export default {
             .setProtectedHeader({ alg: 'HS256' })
             .setExpirationTime('2h')
             .sign(secretKey);
-            
-          return new Response(JSON.stringify({
-            success: true,
-            message: "Đăng nhập thành công",
-            token: JWT_TOKEN,
-          }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+                return new Response(JSON.stringify({
+                  success: true,
+                  message: "Đăng nhập thành công",
+                  token: JWT_TOKEN,
+                }), {headers: {...corsHeaders, "Content-Type": "application/json"}})
         }
         
-        return new Response(JSON.stringify({
-          success: false,
-          message: "Mật khẩu sai rồi",
-        }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
+        else return new Response(JSON.stringify({
+              success: false,
+              message: "Mật khẩu sai rồi",
+            }), {status: 401, headers: {...corsHeaders, "Content-Type": "application/json"}})
 
-      // ==========================================
-      // ROUTE 2: LUỒNG ĐĂNG KÝ
-      // ==========================================
-      if (url.pathname === '/api/auth/register' && request.method === 'POST') {
-        const data = await request.json();
-        const username = data.username;
-        const password = data.password;
-
-        const client = createClient({ url: env.DB_URL, authToken: env.DB_TOKEN });
-        const queryResult = await client.execute({
-          sql: "SELECT * FROM users WHERE username = ?",
-          args: [username]
-        });
-
-        if (queryResult.rows.length > 0) {
-          return new Response(JSON.stringify({
-            success: false,
-            message: "Tài khoản đã tồn tại rồi",
-          }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        } else {
-          const salt = await bcrypt.genSalt(10);
-          const hashedPassword = await bcrypt.hash(password, salt);
-
-          await client.execute({
-            sql: "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-            args: [username, hashedPassword]
-          }); 
-          
-          return new Response(JSON.stringify({
-            success: true,
-            message: "Đăng kí thành công, giờ thì đăng nhập thôi nào (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧",
-          }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }catch(error)
+          {
+            return new Response(JSON.stringify({
+              success: false,
+              message: error.message,
+            }), {status: 500, headers: {...corsHeaders, "Content-Type": "application/json"}})
+          }
         }
-      }
+	// Xử lí đăng bài - chỉ cho phép user đã auth mới được đăng
+	
 
       // ==========================================
       // ROUTE 3: LUỒNG ĐĂNG BÀI VIẾT (Yêu cầu Token)
