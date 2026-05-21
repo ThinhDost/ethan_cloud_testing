@@ -2,19 +2,16 @@
 <html lang="vi">
 <head>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>e t h a n testing website</title>
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <video id="bg-video" loop muted playsinline></video>
     <div id="bg-image-container"></div>
-
     <canvas id="bg-canvas"></canvas>
 
     <div class="shelf-wrapper" id="shelfWrapper">
@@ -46,15 +43,80 @@
 
     <main class="container">
         <div style="text-align: center; margin-bottom: 40px;">
-            <button class="liquid-btn" id="createPostBtn"">
+            <button class="liquid-btn" id="createPostBtn">
                 ✨ Khởi tạo dòng trạng thái...
             </button>
         </div>
-
         <div id="feed-container">
             <div style="text-align: center; color: var(--soft-pink);">☁️ Đang kết nối Đám mây...</div>
         </div>
     </main>
+
+    <div class="auth-user-container">
+        <button id="auth-login-btn" class="glass-btn">Đăng nhập (≧◡≦)</button>
+
+        <div id="user-avatar-wrapper" class="avatar-wrapper hidden">
+            <div class="avatar-circle" id="avatar-click-zone" title="Bấm vào để đổi ảnh đại diện">
+                <img id="user-avatar-img" src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Cat%20with%20Wry%20Smile.png" alt="User Avatar">
+                <div class="avatar-overlay">
+                    <span>Đổi ảnh</span>
+                </div>
+            </div>
+            <input type="file" id="avatar-file-input" accept="image/*" style="display: none;">
+            
+            <div class="user-info-box">
+                <span id="user-display-name" class="user-name-text">Username</span>
+                <button id="auth-logout-btn" class="logout-mini-btn" title="Đăng xuất tài khoản">✖ Đăng xuất</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="auth-modal" class="auth-modal-overlay hidden">
+        <div class="auth-glass-box">
+            <button id="auth-close-btn" class="auth-close-btn">✖</button>
+            
+            <div id="login-section">
+                <h2 class="auth-title">おかえり! <br> (Mừng bạn trở về) ✨</h2>
+                <form id="auth-login-form">
+                    <div class="auth-input-group">
+                        <label for="username">Tên người dùng (ID)</label>
+                        <input type="text" id="username" placeholder="Nhập ID của bạn..." required>
+                    </div>
+                    <div class="auth-input-group">
+                        <label for="password">Mật khẩu</label>
+                        <input type="password" id="password" placeholder="Nhập mật khẩu bí mật..." required>
+                    </div>
+                    <button type="submit" class="auth-submit-btn">Đăng nhập ngay (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧</button>
+                </form>
+                <div class="auth-footer">
+                    <p>Chưa có tài khoản? <a href="#" id="auth-register-link">Đăng ký nè~</a></p>
+                </div>
+            </div>
+
+            <div id="register-section" class="form-hidden">
+                <h2 class="auth-title">はじめまして! <br> (Chào người mới) 🌸</h2>
+                <form id="auth-register-form">
+                    <div class="auth-input-group">
+                        <label for="reg-username">Tên người dùng (ID)</label>
+                        <input type="text" id="reg-username" placeholder="Tên định danh của bạn..." required minlength="3">
+                    </div>
+                    <div class="auth-input-group">
+                        <label for="reg-password">Mật khẩu</label>
+                        <input type="password" id="reg-password" placeholder="Tạo mật khẩu (ít nhất 6 ký tự)..." required minlength="6">
+                    </div>
+                    <div class="auth-input-group">
+                        <label for="reg-confirm-password">Xác nhận mật khẩu</label>
+                        <input type="password" id="reg-confirm-password" placeholder="Nhập lại mật khẩu cho chắc ăn..." required>
+                    </div>
+                    <div id="reg-error-msg" class="auth-error-text"></div>
+                    <button type="submit" class="auth-submit-btn">Tạo tài khoản (๑˃ᴗ˂)ﻭ</button>
+                </form>
+                <div class="auth-footer">
+                    <p>Đã có tài khoản rồi? <a href="#" id="auth-login-link">Quay lại đăng nhập~</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="modal-overlay" id="postModal">
         <div class="glass-panel post-modal">
@@ -68,9 +130,7 @@
             <textarea id="postText" class="glass-textarea" placeholder="Bạn đang nghĩ gì thế? (Hỗ trợ HTML cơ bản)"></textarea>
             
             <div>
-                <label class="file-upload-label" for="postImage">
-                    📷 Đính kèm ảnh (Tự động nén)
-                </label>
+                <label class="file-upload-label" for="postImage">📷 Đính kèm ảnh (Tự động nén)</label>
                 <input type="file" id="postImage" accept="image/*" style="display: none;" onchange="window.handleImageSelect(event)">
             </div>
             
@@ -108,61 +168,19 @@
         <div class="chill-panel" id="chillPanel">
             <div class="chill-header">
                 <h3>✨ Chill Space</h3>
-                <span class="chill-close" id = "chillClose">×</span>
+                <span class="chill-close" id="chillClose">×</span>
             </div>
             
             <details class="chill-dropdown">
                 <summary>🎧 Music</summary>
                 <ul class="chill-list">
-                    <li class="music-item" 
-                        data-path="./music/C418 - BlindSpots.mp3" 
-                        data-title="C418 - BlindSpots" 
-                        data-img="./imgs/GrassBlock.png">
-                        🎶 C418 - BlindSpots
-                    </li>
-
-                    <li class="music-item" 
-                        data-path="./music/Khaim - Mad Trick.mp3" 
-                        data-title="Khaim - Mad Trick" 
-                        data-img="./imgs/Khaim-Madtrick.jpg">
-                        🎶 Khaim - Mad Trick
-                    </li>
-
-                    <li class="music-item" 
-                        data-path="./music/Resonance-slowed.mp3" 
-                        data-title="Resonance" 
-                        data-img="./imgs/Resonance.png">
-                        🚀 Resonance
-                    </li>
-                        
-                    <li class="music-item" 
-                        data-path="./music/Nuts Instrumental.mp3" 
-                        data-title="Nuts Instrumental" 
-                        data-img="./imgs/Nuts Instrumental.jpg">
-                        🚀 Nuts Instrumental
-                    </li>
-                    
-                    <li class="music-item" 
-                        data-path="./music/HoYoHoYo.mp3" 
-                        data-title="HoYoHoYo" 
-                        data-img="./imgs/HoYoHoYo.jpg">
-                        🚀 HoYoHoYo
-                    </li>
-                    
-                    <li class="music-item" 
-                        data-path="./music/Minecraft.mp3" 
-                        data-title="Minecraft" 
-                        data-img="./imgs/minecraft.png">
-                        🚀 Minecraft
-                    </li>
-                    
-                    <li class="music-item" 
-                        data-path="./music/Anamanaguchi - Miku.mp3" 
-                        data-title="Anamanaguchi - Miku" 
-                        data-img="./imgs/Anamanaguchi - Miku.jpg">
-                        🚀 Anamanaguchi - Miku
-                    </li>
-                    
+                    <li class="music-item" data-path="./music/C418 - BlindSpots.mp3" data-title="C418 - BlindSpots" data-img="./imgs/GrassBlock.png">🎶 C418 - BlindSpots</li>
+                    <li class="music-item" data-path="./music/Khaim - Mad Trick.mp3" data-title="Khaim - Mad Trick" data-img="./imgs/Khaim-Madtrick.jpg">🎶 Khaim - Mad Trick</li>
+                    <li class="music-item" data-path="./music/Resonance-slowed.mp3" data-title="Resonance" data-img="./imgs/Resonance.png">🚀 Resonance</li>
+                    <li class="music-item" data-path="./music/Nuts Instrumental.mp3" data-title="Nuts Instrumental" data-img="./imgs/Nuts Instrumental.jpg">🚀 Nuts Instrumental</li>
+                    <li class="music-item" data-path="./music/HoYoHoYo.mp3" data-title="HoYoHoYo" data-img="./imgs/HoYoHoYo.jpg">🚀 HoYoHoYo</li>
+                    <li class="music-item" data-path="./music/Minecraft.mp3" data-title="Minecraft" data-img="./imgs/minecraft.png">🚀 Minecraft</li>
+                    <li class="music-item" data-path="./music/Anamanaguchi - Miku.mp3" data-title="Anamanaguchi - Miku" data-img="./imgs/Anamanaguchi - Miku.jpg">🚀 Anamanaguchi - Miku</li>
                 </ul>
             </details>
 
@@ -174,7 +192,6 @@
                     <li onclick="selectChillBackground('none')" style="color: #ff4d4d;">🚫 Xóa phông nền</li>
                 </ul>
             </details>
-            
             <audio id="chillAudio" loop></audio>
         </div>
 
@@ -203,64 +220,7 @@
             </div>
         </div>
     </div>
-     <script type="module" src="app.js"></script>
+    
+    <script type="module" src="app.js"></script>
 </body>
-
-<button id="auth-login-btn" class="glass-btn">Đăng nhập (≧◡≦)</button>
-
-    <div id="auth-modal" class="auth-modal-overlay hidden">
-        <div class="auth-glass-box">
-            <button id="auth-close-btn" class="auth-close-btn">✖</button>
-            
-            <div id="login-section">
-                <h2 class="auth-title">おかえり! <br> (Mừng bạn trở về) ✨</h2>
-                
-                <form id="auth-login-form">
-                    <div class="auth-input-group">
-                        <label for="username">Tên người dùng (ID)</label>
-                        <input type="text" id="username" placeholder="Nhập ID của bạn..." required>
-                    </div>
-                    <div class="auth-input-group">
-                        <label for="password">Mật khẩu</label>
-                        <input type="password" id="password" placeholder="Nhập mật khẩu bí mật..." required>
-                    </div>
-                    <button type="submit" class="auth-submit-btn">Đăng nhập ngay (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧</button>
-                </form>
-                
-                <div class="auth-footer">
-                    <p>Chưa có tài khoản? <a href="#" id="auth-register-link">Đăng ký nè~</a></p>
-                </div>
-            </div>
-
-            <div id="register-section" class="form-hidden">
-                <h2 class="auth-title">はじめまして! <br> (Chào người mới) 🌸</h2>
-                
-                <form id="auth-register-form">
-                    <div class="auth-input-group">
-                        <label for="reg-username">Tên người dùng (ID)</label>
-                        <input type="text" id="reg-username" placeholder="Tên định danh của bạn..." required minlength="3">
-                    </div>
-                    
-                    <div class="auth-input-group">
-                        <label for="reg-password">Mật khẩu</label>
-                        <input type="password" id="reg-password" placeholder="Tạo mật khẩu (ít nhất 6 ký tự)..." required minlength="6">
-                    </div>
-
-                    <div class="auth-input-group">
-                        <label for="reg-confirm-password">Xác nhận mật khẩu</label>
-                        <input type="password" id="reg-confirm-password" placeholder="Nhập lại mật khẩu cho chắc ăn..." required>
-                    </div>
-                    
-                    <div id="reg-error-msg" class="auth-error-text"></div>
-                    
-                    <button type="submit" class="auth-submit-btn">Tạo tài khoản (๑˃ᴗ˂)ﻭ</button>
-                </form>
-                
-                <div class="auth-footer">
-                    <p>Đã có tài khoản rồi? <a href="#" id="auth-login-link">Quay lại đăng nhập~</a></p>
-                </div>
-            </div>
-
-        </div>
-    </div>
 </html>
