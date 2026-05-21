@@ -4,7 +4,7 @@
 
 import { createClient } from '@libsql/client/web';
 import bcrypt from 'bcryptjs';
-import { SignJWT } from 'jose';
+import { SignJWT, jwtVerify } from 'jose';
 
 export default {
   async fetch(request, env) {
@@ -16,8 +16,21 @@ export default {
     };
 	const url = new URL(request.url)
   const secretKey = new TextEncoder().encode(env.JWT_SECRET);
+
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: corsHeaders
+      });
+    }
     try {
+
+
+    //===========================================
     // XỬ LÍ THÔNG TIN AUTH CỦA USER
+    //===========================================
+
+
       //LUỒNG ĐĂNG NHẬP
     if(url.pathname === '/api/auth/login' && request.method === 'POST')
     {
@@ -62,7 +75,9 @@ export default {
           };
           const JWT_TOKEN = await new SignJWT(userPayload)
             .setProtectedHeader({ alg: 'HS256' })
-            .setExpirationTime('2h')
+            .setIssuer(data.WORKER_URL || 'undefined')
+            .setAudience(data.WEB_URL || 'undefined')
+            .setExpirationTime('1h')
             .sign(secretKey);
                 return new Response(JSON.stringify({
                   success: true,
@@ -84,28 +99,92 @@ export default {
             }), {status: 500, headers: {...corsHeaders, "Content-Type": "application/json"}})
           }
         }
+    if (url.pathname === '/api/auth/register' && request.method === 'POST') {
+      try {
+        const data = await request.json();
+        const username = data.username;
+        const password = data.password;
+
+        if (!username || !password) {
+          return new Response(JSON.stringify({
+            success: false,
+            message: "Vui lòng cung cấp đầy đủ thông tin"
+          }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
+        const client = createClient({ url: env.DB_URL, authToken: env.DB_TOKEN });
+        const existingUser = await client.execute({
+          sql: "SELECT * FROM users WHERE username = ?",
+          args: [username]
+        });
+
+        if (existingUser.rows.length > 0) {
+          return new Response(JSON.stringify({
+            success: false,
+            message: "Tài khoản đã tồn tại"
+          }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        await client.execute({
+          sql: "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+          args: [username, hashedPassword]
+        });
+
+        return new Response(JSON.stringify({
+          success: true,
+          message: "Đăng ký thành công"
+        }), { status: 201, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      } catch (error) {
+        return new Response(JSON.stringify({
+          success: false,
+          message: error.message
+        }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }  
 	// Xử lí đăng bài - chỉ cho phép user đã auth mới được đăng
 	
 
       // ==========================================
       // ROUTE 3: LUỒNG ĐĂNG BÀI VIẾT (Yêu cầu Token)
       // ==========================================
-      if (url.pathname === '/api/posts/create' && request.method === 'POST') {
+      if (url.pathname.includes('/api/posts/create') && request.method === 'POST') {
         const authHeader = request.headers.get("Authorization") || "";
         
+        // 1. Kiểm tra định dạng Header
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
           return new Response(JSON.stringify({
             success: false,
-            message: "Thiếu token đăng nhập"
+            message: "Bạn chưa đăng nhập hoặc thiếu token xác thực!"
           }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
+        
         const token = authHeader.replace("Bearer ", "");
         const secret = new TextEncoder().encode(env.JWT_SECRET);
-
-        // Lưu ý xử lý kiểm tra Verify Token của thư viện jose ở đây nếu cần thiết giống code cũ của bạn
         
+        let verifiedPayload;
+        try {
+          // 2. Tiến hành GIẢI MÃ và THẨM ĐỊNH Token
+          // Nếu token giả hoặc hết hạn, hàm này sẽ ném ra lỗi lập tức nhảy xuống catch
+          const { payload } = await jwtVerify(token, secret);
+          verifiedPayload = payload; // Lấy được két sắt thông tin chứa: userId, username, role
+          
+        } catch (jwtError) {
+          // Trả về lỗi 401 nếu token không hợp lệ, chặn đứng không cho xuống DB
+          return new Response(JSON.stringify({
+            success: false,
+            message: "Phiên đăng nhập đã hết hạn hoặc Token không hợp lệ! Vui lòng đăng nhập lại."
+          }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
+        // 3. Token HỢP LỆ -> Tiến hành xử lý dữ liệu bài viết
         const data = await request.json();
-        const author = data.author;
+        
+        // ĐỈNH CAO BẢO MẬT: Lấy thẳng username từ token đã xác thực chứ không tin Frontend gửi lên nữa!
+        const author = verifiedPayload.username; 
+        
         let finalContent = data.text;
         const image = data.image || null;
         if (image) finalContent += `<br><img src="${image}" class="post-uploaded-image">`;
@@ -118,7 +197,7 @@ export default {
 
         return new Response(JSON.stringify({
           success: true,
-          message: "Đăng bài thành công",
+          message: "Đăng bài thành công dưới tư cách: " + author,
         }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
@@ -138,36 +217,11 @@ export default {
         const requestBody = await request.json();
         const postId = requestBody.postId;
 
-        const tursoDeleteUrl = `${env.DB_URL}/v2/pipeline`;
-        const tursoPayload = {
-          requests: [
-            {
-              type: "execute",
-              stmt: {
-                sql: "DELETE FROM posts WHERE id = ?",
-                args: [{ type: "integer", value: String(postId) }] 
-              }
-            },
-            { type: "close" }
-          ]
-        };
-
-        const tursoResponse = await fetch(tursoDeleteUrl, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${env.DB_TOKEN}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(tursoPayload)
+        const client = createClient({ url: env.DB_URL, authToken: env.DB_TOKEN });
+        await client.execute({
+          sql: "DELETE FROM posts WHERE id = ?",
+          args: [postId]
         });
-
-        if (!tursoResponse.ok) {
-           const errorText = await tursoResponse.text();
-           return new Response(JSON.stringify({ error: "Turso từ chối xóa: " + errorText }), { 
-             status: 500, 
-             headers: corsHeaders 
-           });
-        }
 
         return new Response(JSON.stringify({ success: true }), { 
           status: 200, 
