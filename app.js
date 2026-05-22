@@ -732,6 +732,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.error("Không thể đồng bộ ảnh đại diện lên máy chủ:", resData.message);
                         } else {
                             console.log("Đồng bộ ảnh đại diện thành công!");
+                            if (resData.avatar) {
+                                // Thay thế Base64 tạm thời bằng đường dẫn R2 cực nhẹ từ server!
+                                localStorage.setItem("localUserAvatar", resData.avatar);
+                                document.getElementById("user-avatar-img").src = resData.avatar;
+                            }
                         }
                     } catch (err) {
                         console.error("Lỗi đồng bộ ảnh đại diện:", err);
