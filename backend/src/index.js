@@ -12,7 +12,7 @@ export default {
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS", 
-      "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Password",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Password, worker-url, worker-api",
     };
 	const url = new URL(request.url)
   const secretKey = new TextEncoder().encode(env.JWT_SECRET);

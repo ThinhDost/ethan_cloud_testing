@@ -96,6 +96,13 @@ async function checkAuthBeforeSubmit() {
         await window.magicPopup("Bạn chưa đăng nhập! (＃￣ω￣)", "alert");
         return;
     }
+    const loggedUsername = getUsernameFromToken(currentToken) || "Ethan";
+    const authorInput = document.getElementById('postAuthor');
+    if (authorInput) {
+        authorInput.value = loggedUsername;
+        authorInput.disabled = true;
+        authorInput.style.opacity = '0.7';
+    }
     toggleModal(true);
 }
 
@@ -421,23 +428,46 @@ window.fetchPosts = async function() {
              return;
         }
         result.rows.forEach(post => {
-            const safeauthor = escapeHTML(post.author) || 'Anonymous';
-            const rawText = post.content || '';
-            const safeContent = DOMPurify.sanitize(rawText);
+            const safeauthor = DOMPurify.sanitize(post.author || "Ẩn danh");
+            const authorAvatar = post.avatar || "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Cat%20with%20Wry%20Smile.png";
+            
+            // Lưu ý: Đoạn code cũ của bạn dùng biến postContent ở trên nhưng ở dưới innerHTML lại gọi safeContent. 
+            // Mình xin phép chuẩn hóa lại thành safeContent để tránh lỗi crash Javascript nhé!
+            const safeContent = DOMPurify.sanitize(post.content);
             const date = new Date(post.created_at + "Z").toLocaleString('vi-VN');
             const postId = post.id;
+
+            // --- ĐOẠN XỬ LÝ ẢNH BÀI VIẾT (MỚI THÊM) ---
+            // Kiểm tra xem bài viết có chứa trường link ảnh bài viết (image_url) hay không
+            const postImage = post.image_url ? DOMPurify.sanitize(post.image_url) : null;
+            let imageHTML = "";
+            if (postImage) {
+                imageHTML = `
+                    <div class="post-attached-image" style="margin-top: 15px; margin-bottom: 5px; border-radius: 12px; overflow: hidden; max-height: 350px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                        <img src="${postImage}" alt="Attached Image" style="width: 100%; height: auto; display: block; object-fit: cover;" onerror="this.style.display='none';">
+                    </div>
+                `;
+            }
+            // ------------------------------------------
+
             feed.innerHTML += `
                 <div id="post-wrapper-${postId}" style="margin-bottom: 20px;">
                     <article class="glass-panel" id="post-article-${postId}" style="margin-bottom: 0;">
-                        <div class="post-header">
-                            <div class="avatar">${safeauthor.charAt(0).toUpperCase()}</div>
+                        <div class="post-header" style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                            
+                            <img src="${authorAvatar}" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-pink); background: var(--glass-bg);" onerror="this.src='https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Cat%20with%20Wry%20Smile.png';'">
+                            
                             <div>
-                                <h3 style="color: var(--soft-pink);">${safeauthor}</h3>
-                                <span class="post-meta">Đăng lúc: ${date}</span>
+                                <h3 style="color: var(--soft-pink); margin: 0; font-size: 1rem;">${safeauthor}</h3>
+                                <span class="post-meta" style="font-size: 0.8rem; opacity: 0.7;">Đăng lúc: ${date}</span>
                             </div>
                         </div>
+                        
                         <div class="post-content">${safeContent}</div>
-                        <div class="flex-between" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                        
+                        ${imageHTML}
+                        
+                        <div class="flex-between" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-top: 15px;">
                             <div>
                                 <button class="liquid-btn" style="padding: 8px 15px; font-size: 0.9rem;">💖 Thích</button>
                                 <button class="liquid-btn" style="padding: 8px 15px; font-size: 0.9rem;">💬 Bình luận</button>
@@ -452,7 +482,7 @@ window.fetchPosts = async function() {
         console.error("Lỗi tải dữ liệu:", error);
         feed.innerHTML = `<div style="text-align: center; color: red;">Lỗi tải dữ liệu. Lỗi chi tiết: ${error.message}</div>`;
     }
-}
+};
 
 const submitBtn = document.getElementById('submitBtn');
 if(submitBtn) {
@@ -462,36 +492,55 @@ if(submitBtn) {
 }
 
 window.submitPost = async function() {
+    // 1. Kiểm tra quyền đăng nhập và lấy Token chính xác từ hệ thống cũ của bạn
     const tokenSubmit = localStorage.getItem('user_token') || localStorage.getItem('authToken');
     if (!tokenSubmit) {
         await window.magicPopup("Vui lòng đăng nhập để có quyền đăng bài viết! ⚠️", "alert");
         return;
     }
-    const author = document.getElementById('postAuthor').value || 'Anonymous';
+
+    // 2. Lấy nội dung chữ trong ô textarea
     const text = document.getElementById('postText').value;
-    if (!text.trim() && !currentBase64Image) return;
+    if (!text.trim()) return; // Nếu trống thì dừng lại luôn, tránh gửi request rác
+
+    // 3. Giải mã tokenSubmit (đã lấy ở bước 1) để lấy Username của người đăng bài
+    const currentUsername = getUsernameFromToken(tokenSubmit) || "Ẩn danh";
+
+    // 4. Lấy link avatar của người dùng hiện tại từ localStorage
+    const currentAvatar = localStorage.getItem("localUserAvatar") || "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Cat%20with%20Wry%20Smile.png";
+
+    // 5. Đóng gói dữ liệu (Payload) sạch sẽ gửi sang Backend Worker
+    const postPayload = {
+        content: text,
+        username: currentUsername,
+        avatar: currentAvatar,
+        image: currentBase64Image
+    };
     
     const btn = document.getElementById('submitBtn');
     btn.innerText = "⏳ Đang phóng lên đám mây...";
     btn.disabled = true;
 
     try {
+        // 6. Gửi API đến Backend (Worker đảm nhận việc thực thi xuống Turso DB)
         const response = await fetch(`${API_URL}/api/posts/create`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'WORKER-URL': API_URL, 
                 'Authorization': `Bearer ${tokenSubmit}`
             },
-            body: JSON.stringify({ author: author, text: text, image: currentBase64Image })
+            body: JSON.stringify(postPayload)
         });
+        
         const result = await response.json();
         if (!response.ok || !result.success) throw new Error(result.message || "Đăng bài thất bại");
         
+        // 7. Reset Form và cập nhật lại giao diện sau khi Backend báo thành công
         document.getElementById('postText').value = '';
-        window.removeImage(); 
-        toggleModal(false); 
+        if (typeof window.removeImage === 'function') window.removeImage(); 
+        if (typeof toggleModal === 'function') toggleModal(false); 
         await window.fetchPosts(); 
+        
     } catch (error) {
         await window.magicPopup("Lỗi khi đăng: " + error.message, "alert");
     } finally {
@@ -518,7 +567,6 @@ window.deletePost = async function(postId) {
                 "Content-Type": "application/json",
                 "X-Admin-Password": passcode,
                 'Authorization': 'Bearer ' + tokenDelete,
-                'WORKER-API': API_URL,
             },
             body: JSON.stringify({ postId: postId })
         });
