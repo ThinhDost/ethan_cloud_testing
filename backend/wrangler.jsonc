@@ -49,4 +49,10 @@
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
 	 */
 	// "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
+  "r2_buckets": [
+    {
+      "binding": "MY_BUCKET",
+      "bucket_name": "ethan-uploads"
+    }
+  ]
 }

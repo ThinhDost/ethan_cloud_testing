@@ -23,6 +23,39 @@ export default {
         headers: corsHeaders
       });
     }
+
+    // ==========================================
+    // ROUTE: PHỤC VỤ HÌNH ẢNH TỪ R2 BUCKET
+    // ==========================================
+    if (url.pathname.startsWith('/images/') && request.method === 'GET') {
+      try {
+        const filename = url.pathname.replace('/images/', '');
+        const object = await env.MY_BUCKET.get(filename);
+        if (!object) {
+          return new Response("Image not found ┐(￣～￣)┌", { 
+            status: 404, 
+            headers: corsHeaders 
+          });
+        }
+        
+        const headers = new Headers();
+        object.writeHttpMetadata(headers);
+        headers.set("etag", object.httpEtag);
+        headers.set("Access-Control-Allow-Origin", "*");
+        headers.set("Cache-Control", "public, max-age=86400"); // Cache 1 ngày để tăng tốc tải trang
+        
+        return new Response(object.body, { headers });
+      } catch (err) {
+        return new Response(JSON.stringify({
+          success: false,
+          message: "Lỗi đọc ảnh từ R2: " + err.message
+        }), { 
+          status: 500, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        });
+      }
+    }
+
     try {
 
 
@@ -184,15 +217,36 @@ export default {
           }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
 
+        let avatarUrl = avatar;
+        if (avatar.startsWith("data:image/")) {
+          try {
+            const filename = `${crypto.randomUUID()}_avatar.jpg`;
+            const base64Data = avatar.replace(/^data:image\/\w+;base64,/, "");
+            const buffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+            
+            await env.MY_BUCKET.put(filename, buffer, {
+              httpMetadata: { contentType: "image/jpeg" }
+            });
+            
+            const workerUrl = new URL(request.url).origin;
+            avatarUrl = `${workerUrl}/images/${filename}`;
+          } catch (uploadError) {
+            console.error("Lỗi tải ảnh đại diện lên R2:", uploadError.message);
+            // Fallback: Dùng Base64 nếu R2 lỗi hoặc chưa cấu hình
+            avatarUrl = avatar;
+          }
+        }
+
         const client = createClient({ url: env.DB_URL, authToken: env.DB_TOKEN });
         await client.execute({
           sql: "UPDATE users SET avatar = ? WHERE id = ?",
-          args: [avatar, userId]
+          args: [avatarUrl, userId]
         });
 
         return new Response(JSON.stringify({
           success: true,
-          message: "Cập nhật ảnh đại diện thành công!"
+          message: "Cập nhật ảnh đại diện thành công!",
+          avatar: avatarUrl
         }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       } catch (error) {
         return new Response(JSON.stringify({
@@ -246,7 +300,31 @@ export default {
         
         let finalContent = data.content || data.text || "";
         const image = data.image || null;
-        if (image) finalContent += `<br><img src="${image}" class="post-uploaded-image">`;
+        
+        if (image) {
+          if (image.startsWith("data:image/")) {
+            try {
+              const filename = `${crypto.randomUUID()}.jpg`;
+              const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+              const buffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+              
+              await env.MY_BUCKET.put(filename, buffer, {
+                httpMetadata: { contentType: "image/jpeg" }
+              });
+              
+              const workerUrl = new URL(request.url).origin;
+              const imageUrl = `${workerUrl}/images/${filename}`;
+              finalContent += `<br><img src="${imageUrl}" class="post-uploaded-image">`;
+            } catch (uploadError) {
+              console.error("Lỗi tải ảnh bài viết lên R2:", uploadError.message);
+              // Fallback: Nếu R2 lỗi hoặc chưa thiết lập, vẫn dùng Base64 để tránh gián đoạn
+              finalContent += `<br><img src="${image}" class="post-uploaded-image">`;
+            }
+          } else {
+            // Nếu gửi sẵn link ảnh thô
+            finalContent += `<br><img src="${image}" class="post-uploaded-image">`;
+          }
+        }
 
         const client = createClient({ url: env.DB_URL, authToken: env.DB_TOKEN });
         await client.execute({
