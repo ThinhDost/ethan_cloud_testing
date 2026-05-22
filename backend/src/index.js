@@ -83,6 +83,7 @@ export default {
                   success: true,
                   message: "Đăng nhập thành công",
                   token: JWT_TOKEN,
+                  avatar: existUser.avatar || null
                 }), {headers: {...corsHeaders, "Content-Type": "application/json"}})
         }
         
@@ -144,6 +145,63 @@ export default {
         }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
     }  
+
+    // ==========================================
+    // ROUTE: CẬP NHẬT AVATAR (Yêu cầu Token)
+    // ==========================================
+    if (url.pathname === '/api/users/update-avatar' && request.method === 'POST') {
+      const authHeader = request.headers.get("Authorization") || "";
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return new Response(JSON.stringify({
+          success: false,
+          message: "Bạn chưa đăng nhập hoặc thiếu token xác thực!"
+        }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      const token = authHeader.replace("Bearer ", "");
+      const secret = new TextEncoder().encode(env.JWT_SECRET);
+      
+      let verifiedPayload;
+      try {
+        const { payload } = await jwtVerify(token, secret);
+        verifiedPayload = payload;
+      } catch (jwtError) {
+        return new Response(JSON.stringify({
+          success: false,
+          message: "Phiên đăng nhập đã hết hạn hoặc Token không hợp lệ! Vui lòng đăng nhập lại."
+        }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      try {
+        const data = await request.json();
+        const avatar = data.avatar;
+        const userId = verifiedPayload.userId;
+
+        if (!avatar) {
+          return new Response(JSON.stringify({
+            success: false,
+            message: "Thiếu dữ liệu ảnh đại diện!"
+          }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
+        const client = createClient({ url: env.DB_URL, authToken: env.DB_TOKEN });
+        await client.execute({
+          sql: "UPDATE users SET avatar = ? WHERE id = ?",
+          args: [avatar, userId]
+        });
+
+        return new Response(JSON.stringify({
+          success: true,
+          message: "Cập nhật ảnh đại diện thành công!"
+        }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      } catch (error) {
+        return new Response(JSON.stringify({
+          success: false,
+          message: "Lỗi hệ thống: " + error.message
+        }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
+
 	// Xử lí đăng bài - chỉ cho phép user đã auth mới được đăng
 	
 

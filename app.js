@@ -638,6 +638,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(data.success) {
                     localStorage.setItem('authToken', data.token); 
                     localStorage.setItem('user_token', data.token); // Đồng bộ cho tính năng viết bài
+                    if (data.avatar) {
+                        localStorage.setItem('localUserAvatar', data.avatar);
+                    }
                     modal.classList.add('hidden'); 
                     checkAuthUI(); // Kích hoạt biến hình nút Đăng nhập thành Avatar ngay lập tức!
                 } else {
@@ -707,10 +710,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const file = event.target.files[0];
         if (file) {
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 const base64Image = e.target.result;
                 document.getElementById("user-avatar-img").src = base64Image;
                 localStorage.setItem("localUserAvatar", base64Image); // Lưu trữ ảnh lại để F5 không mất
+
+                // Gửi đồng bộ lên Turso Database qua Cloudflare Worker
+                const activeToken = localStorage.getItem("authToken") || localStorage.getItem("user_token");
+                if (activeToken) {
+                    try {
+                        const response = await fetch(`${API_URL}/api/users/update-avatar`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${activeToken}`
+                            },
+                            body: JSON.stringify({ avatar: base64Image })
+                        });
+                        const resData = await response.json();
+                        if (!response.ok || !resData.success) {
+                            console.error("Không thể đồng bộ ảnh đại diện lên máy chủ:", resData.message);
+                        } else {
+                            console.log("Đồng bộ ảnh đại diện thành công!");
+                        }
+                    } catch (err) {
+                        console.error("Lỗi đồng bộ ảnh đại diện:", err);
+                    }
+                }
             };
             reader.readAsDataURL(file);
         }
