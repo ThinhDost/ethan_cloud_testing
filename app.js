@@ -10,7 +10,7 @@ const currentHost = window.location.hostname;
 if (currentHost === "localhost" || currentHost === "127.0.0.1") {
     API_URL = "http://localhost:8787"; 
 } else if (currentHost === "ethan-cloud-testing.pages.dev") {
-    API_URL = "https://db-info.giathinh260307.workers.dev"; 
+    API_URL = "https://backend.giathinh260307.workers.dev"; 
 } else {
     API_URL = "https://backend-dev.giathinh260307.workers.dev"; 
 }
