@@ -184,15 +184,16 @@ export default {
         
         // ĐỈNH CAO BẢO MẬT: Lấy thẳng username từ token đã xác thực chứ không tin Frontend gửi lên nữa!
         const author = verifiedPayload.username; 
+        const avatar = data.avatar || null;
         
-        let finalContent = data.text;
+        let finalContent = data.content || data.text || "";
         const image = data.image || null;
         if (image) finalContent += `<br><img src="${image}" class="post-uploaded-image">`;
 
         const client = createClient({ url: env.DB_URL, authToken: env.DB_TOKEN });
         await client.execute({
-          sql: "INSERT INTO posts (author, content) VALUES (?, ?)",
-          args: [author, finalContent]
+          sql: "INSERT INTO posts (author, content, avatar) VALUES (?, ?, ?)",
+          args: [author, finalContent, avatar]
         });
 
         return new Response(JSON.stringify({
